@@ -1,0 +1,68 @@
+Crie um site clean que seja uma extensão da minha página do X: https://x.com/CafeComSardinha
+Use um System Design tailwindcss
+
+Cabeçalho (Mesma ideia do X - Logo e imagem de fundo)
+
+Apresentação
+Meu codinome é Café. Sou técnico em Contabilidade e Programação, formado em Web Design e Programação, com MBA em Banco de Dados Oracle e mestrado em Administração. Desenvolvo software desde os 13 anos de idade e invisto no mercado financeiro desde 2010.
+
+Meus principais temas de interesse e atuação são Mercado Financeiro, Educação Financeira, Aleatoriedade Computacional, Estatística, Planejamento e Processos Organizacionais e Pesquisa Operacional.
+
+Tenho perfil criativo, humor ácido e boa leitura de contextos. Gosto de transformar assuntos complexos em textos claros, provocativos e acessíveis, combinando capacidade analítica com uma linguagem capaz de prender a atenção do público.
+
+
+Simuladores (Será implementado na sequencia cada simulador)
+- Compare títulos de renda fixa
+- Compare preço à vista x a prazo aplicando em CDB
+- Compare previdência privada x Investidor em CDB
+
+Achadinhos do Café (Produtos que eu já comprei e indico)
+- Produto 1 (link da Amazon)
+- Produto 2 (link da Amazon)
+- Produto 3 (link da Amazon)
+- Produto 4 (link da Amazon)
+- Produto 5 (link da Amazon)
+
+Artigos Interessantes (Pago)
+- Lotofácil
+- Educação Financeira Básica
+- Problema da mochila na Renda Fixa
+- Análise de dividendos
+- Modelo de Sorteio Computacional
+
+Livros Interessantes (Coloque icone de livros)
+- Livro 1 (link da Amazon)
+- Livro 2 (link da Amazon)
+- Livro 3 (link da Amazon)
+- Livro 4 (link da Amazon)
+
+Frases Interessantes
+- Frase 1 (Autor)
+- Frase 2 (Autor)
+- Frase 3 (Autor)
+- Frase 4 (Autor)
+- Frase 5 (Autor)
+
+Postagens Interessantes (Coloque icone de Postagens)
+- Postagem 1
+- Postagem 2
+- Postagem 3
+- Postagem 4
+- Postagem 5
+
+Depoimentos sobre o perfil
+- Depoimento 1
+- Depoimento 2
+- Depoimento 3
+- Depoimento 4
+- Depoimento 5
+
+Rentabilidade Mensal (Acompanhe a rentabilidade mensal divulgada)
+- Maio de 2026
+- Junho de 2026
+- Julho de 2026
+- Agosto de 2026
+
+Rodapé
+Entre em contato para publicidade e dúvidas de educação financeira
+cafecomsardinha@gmail.com
