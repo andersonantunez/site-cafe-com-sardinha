@@ -1,0 +1,161 @@
+{
+  "descricao": "Frases revisadas gramaticalmente, preservando o estilo e o sentido originais.",
+  "frases": [
+    {
+      "id": 1,
+      "texto": "Nunca subestime a influência do custo de capital do país onde você vai investir seu dinheiro."
+    },
+    {
+      "id": 2,
+      "texto": "Todo provento que você recebe no mercado financeiro sofre ajuste nominal. Se você vai receber R$ 1 de provento, na data-ex, a bolsa (ou o intermediário) desconta R$ 1 antes do pregão. Ou seja: você não ganhou nada! Você sempre vai precisar que o ativo se valorize para ter ganho de capital."
+    },
+    {
+      "id": 3,
+      "texto": "Se alguém bateu à sua porta dizendo que é uma oportunidade fantástica, é porque não é uma oportunidade. Ninguém faz isso com estranhos do varejo."
+    },
+    {
+      "id": 4,
+      "texto": "As melhores oportunidades do mercado financeiro geralmente são absorvidas em segundos."
+    },
+    {
+      "id": 5,
+      "texto": "Não perder dinheiro é mais importante do que ganhar dinheiro. Pode levar muito tempo para você recuperar um drawdown. Você precisa de 100% de alta para recuperar uma perda de 50%, fora a inflação."
+    },
+    {
+      "id": 6,
+      "texto": "Eu não divulgo absolutamente nada em que eu não acredite. Prefiro permanecer pobre a prejudicar outras pessoas."
+    },
+    {
+      "id": 7,
+      "texto": "Todos os eventos econômicos que hoje eu não sei explicar por que não funcionaram como eu imaginava, eu enfio na bunda do longo prazo."
+    },
+    {
+      "id": 8,
+      "texto": "Não me venha com seriedade num país cheio de palhaçadas."
+    },
+    {
+      "id": 9,
+      "texto": "O melhor hedge para um fanfarrão dos investimentos é NÃO abrir um fundo de ações. Cota não mente!"
+    },
+    {
+      "id": 10,
+      "texto": "“Vai faltar papel...” (2020, 2021, 2022, 2023, 2024, 2025, 2026...)"
+    },
+    {
+      "id": 11,
+      "texto": "Em terra de juros altos, quem toma empréstimo pela metade da Selic é rei."
+    },
+    {
+      "id": 12,
+      "texto": "A taxação dos dividendos é aquela inspeção do Estado para garantir que o investidor realmente foi enterrado no caixão da renda variável sem nenhuma moedinha escondida nos bolsos."
+    },
+    {
+      "id": 13,
+      "texto": "Gráfico é como uma bússola. Você sabe que o caminho do sol é por ali, mas isso não significa que não possa existir um penhasco à sua frente."
+    },
+    {
+      "id": 14,
+      "texto": "A única alma que dá certeza no mercado de renda variável é o insider."
+    },
+    {
+      "id": 15,
+      "texto": "Quem compra ativo com a faca caindo vive hoje com a mão furada e mancando."
+    },
+    {
+      "id": 16,
+      "texto": "Se você está procurando um produto para investir e não o está encontrando, é nesse produto que você precisaria investir."
+    },
+    {
+      "id": 17,
+      "texto": "Não adianta saber pescar se você estiver no rio errado, onde não há peixes."
+    },
+    {
+      "id": 18,
+      "texto": "Como eu quero que meu papel suba, resolvi vender apenas 200 ações."
+    },
+    {
+      "id": 19,
+      "texto": "Se a lagosta chegou ao varejo, é porque os tubarões perceberam que não era uma lagosta."
+    },
+    {
+      "id": 20,
+      "texto": "O Brasil, historicamente, faz muito esforço para não dar certo. E eu devo fazer pouco esforço."
+    },
+    {
+      "id": 21,
+      "texto": "No longo prazo, todos estaremos mortos!"
+    },
+    {
+      "id": 22,
+      "texto": "Se você estiver no meio do lixo procurando pérolas, a diversificação é uma burrice."
+    },
+    {
+      "id": 23,
+      "texto": "Não há problema algum em você ter nascido pobre. Mas há um problema se você permanecer com mentalidade de pobre."
+    },
+    {
+      "id": 24,
+      "texto": "Você não precisa ser o melhor, só precisa reconhecer quem são os melhores."
+    },
+    {
+      "id": 25,
+      "texto": "Todo malandro se escora em uma estratégia complexa, difícil de entender."
+    },
+    {
+      "id": 26,
+      "texto": "Como investidor, prefiro juros altos. Como apostador, prefiro juros baixos."
+    },
+    {
+      "id": 27,
+      "texto": "Negócio bom é aquele que tu negocias com quem não pensa muito."
+    },
+    {
+      "id": 28,
+      "texto": "Não há processo organizacional que resista a uma ordem expressa do chefe do chefe do chefe."
+    },
+    {
+      "id": 29,
+      "texto": "Tem gente que só consegue ser disciplinada pagando boletos."
+    },
+    {
+      "id": 30,
+      "texto": "O cemitério dos perdedores é silencioso. Quem conta os ganhos esconde os fumos."
+    },
+    {
+      "id": 31,
+      "texto": "Venda um serviço que consiga fazer uma lavagem cerebral no seu cliente a ponto de ele se sentir feliz perdendo dinheiro."
+    },
+    {
+      "id": 32,
+      "texto": "Prometeram-me a lua na bolsa brasileira; acabei perto do Titanic."
+    },
+    {
+      "id": 33,
+      "texto": "Não existe combustível maior para alguém mudar sua realidade do que o sentimento de indignação perante a sua situação."
+    },
+    {
+      "id": 34,
+      "texto": "São uns leões para falar do passado. Uns gatinhos para prever o futuro."
+    },
+    {
+      "id": 35,
+      "texto": "Esse ativo eu só vendo para quem não vem com dinheiro contado."
+    },
+    {
+      "id": 36,
+      "texto": "Se você quer fisgar incautos, coloque na prateleira a maior quantidade possível de lixos diferentes para eles escolherem."
+    },
+    {
+      "id": 37,
+      "texto": "A ignorância é uma casa cheia de oportunidades."
+    },
+    {
+      "id": 38,
+      "texto": "Bolsa brasileira está barata. (Cacique Tibiriçá)"
+    },
+    {
+      "id": 39,
+      "texto": "A estatística é dura: a maioria dos ativos de renda variável perde para o CDI. E a maioria dos gestores também."
+    }
+  ]
+}

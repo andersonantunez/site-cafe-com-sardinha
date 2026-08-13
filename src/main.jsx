@@ -1,13 +1,16 @@
-import React, { useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import { createRoot } from 'react-dom/client'
 import {
   ArrowRight, BarChart3, BookOpen, Bookmark, Calculator, CalendarDays,
   ChevronLeft, ChevronRight, ExternalLink, Mail, MessageCircle, Package,
-  PenLine, Quote, Search, ShoppingBag, Sparkles, TrendingUp,
+  HeartHandshake, PenLine, Quote, Search, ShoppingBag, Sparkles, TrendingUp,
 } from 'lucide-react'
 import './styles.css'
-import logoImage from './assets/images/logo2.png'
+import logoImage from './assets/images/logo3.png'
 import coffeeImage from './assets/images/cafe-quente-caricatura.png'
+import cafeProductsImage from './assets/images/produtos-cafe.png'
+import quotesData from './frases_revisadas.json'
+import postsData from './postagens_cafe_com_sardinha.json'
 
 const simulators = [
   { icon: BarChart3, title: 'Compare títulos de renda fixa', text: 'Coloque CDB, LCI, LCA e Tesouro lado a lado.' },
@@ -24,11 +27,9 @@ const articles = [
   ['Modelo de Sorteio Computacional', 'Aleatoriedade'],
 ]
 const books = ['Livro 1', 'Livro 2', 'Livro 3', 'Livro 4']
-const posts = ['Postagem 1', 'Postagem 2', 'Postagem 3', 'Postagem 4', 'Postagem 5']
-const quotes = [
-  ['Frase 1', 'Autor'], ['Frase 2', 'Autor'], ['Frase 3', 'Autor'],
-  ['Frase 4', 'Autor'], ['Frase 5', 'Autor'],
-]
+const posts = postsData.postagens.filter(post => post.publico)
+const cardSuits = ['♠', '♥', '♦', '♣']
+const quotes = quotesData.frases.map(({ id, texto }) => ({ id, text: texto }))
 const testimonials = [
   ['Depoimento 1', '@seguidor01'], ['Depoimento 2', '@seguidor02'],
   ['Depoimento 3', '@seguidor03'], ['Depoimento 4', '@seguidor04'],
@@ -54,6 +55,24 @@ function PlaceholderLink({ children, className = '' }) {
 function App() {
   const [quoteIndex, setQuoteIndex] = useState(0)
   const [menuOpen, setMenuOpen] = useState(false)
+  const [visiblePostRows, setVisiblePostRows] = useState(2)
+  const [postColumns, setPostColumns] = useState(() => window.innerWidth <= 600 ? 2 : window.innerWidth <= 900 ? 3 : 5)
+
+  useEffect(() => {
+    const interval = window.setInterval(() => {
+      setQuoteIndex(current => (current + 1) % quotes.length)
+    }, 8000)
+    return () => window.clearInterval(interval)
+  }, [])
+
+  useEffect(() => {
+    const updateColumns = () => setPostColumns(window.innerWidth <= 600 ? 2 : window.innerWidth <= 900 ? 3 : 5)
+    window.addEventListener('resize', updateColumns)
+    return () => window.removeEventListener('resize', updateColumns)
+  }, [])
+
+  const visiblePosts = posts.slice(0, visiblePostRows * postColumns)
+  const hasMorePosts = visiblePosts.length < posts.length
 
   return <div className="app-shell">
     <nav className="topbar">
@@ -119,8 +138,15 @@ function App() {
       </section>
 
       <section id="achadinhos" className="section tinted">
-        <SectionTitle eyebrow="Curadoria" title="Achadinhos do Café" description="Produtos que eu já comprei, testei e indico." action="Ver todos" />
-        <div className="product-grid">{products.map((name, i) => <PlaceholderLink key={name} className="product-card"><div className="product-visual"><Package size={34}/><span>0{i+1}</span></div><small>Indicação do Café</small><h3>{name}</h3><span className="amazon-link">Ver na Amazon <ExternalLink size={14}/></span></PlaceholderLink>)}</div>
+        <div className="curation-block">
+          <SectionTitle eyebrow="Curadoria" title="Achadinhos do Café" description="Produtos que eu já comprei, testei e indico." action="Ver todos" />
+          <div className="product-grid">{products.map((name, i) => <PlaceholderLink key={name} className="product-card"><div className="product-visual"><Package size={34}/><span>0{i+1}</span></div><small>Indicação do Café</small><h3>{name}</h3><span className="amazon-link">Ver na Amazon <ExternalLink size={14}/></span></PlaceholderLink>)}</div>
+        </div>
+        <div className="brand-products">
+          <div className="brand-products-heading"><div><span className="eyebrow">Nossa marca</span><h2>Produtos do Café</h2><p>Canecas, bonés, camisetas e moletons com a identidade Café com Sardinha.</p></div><div className="charity-seal"><HeartHandshake size={28}/><span><strong>Lucro 100% solidário</strong>Todo o lucro será revertido para instituições de caridade.</span></div></div>
+          <figure className="brand-products-showcase"><img src={cafeProductsImage} alt="Coleção de canecas, bonés, camisetas e moletons Café com Sardinha" /></figure>
+          <div className="brand-products-footer"><p>Vista a marca. Espalhe a ideia. Ajude quem precisa.</p><span className="soon product-launch">Em breve</span></div>
+        </div>
       </section>
 
       <section id="conteudos" className="section content-split">
@@ -136,13 +162,23 @@ function App() {
 
       <section className="quote-band">
         <div className="quote-art"><Quote/></div>
-        <div className="quote-content"><span className="eyebrow">Frases interessantes</span><blockquote>“{quotes[quoteIndex][0]}”</blockquote><p>— {quotes[quoteIndex][1]}</p></div>
+        <div className="quote-content"><span className="eyebrow">Frases interessantes</span><blockquote>“{quotes[quoteIndex].text}”</blockquote><p>— Café com Sardinha</p></div>
         <div className="quote-controls"><button onClick={() => setQuoteIndex((quoteIndex - 1 + quotes.length) % quotes.length)} aria-label="Frase anterior"><ChevronLeft/></button><span>{quoteIndex + 1} / {quotes.length}</span><button onClick={() => setQuoteIndex((quoteIndex + 1) % quotes.length)} aria-label="Próxima frase"><ChevronRight/></button></div>
       </section>
 
       <section className="section posts-section">
         <SectionTitle eyebrow="Do feed" title="Postagens interessantes" description="Uma seleção de ideias que vale salvar para ler de novo." action="Acompanhar no X" />
-        <div className="post-grid">{posts.map((post, i) => <PlaceholderLink className="post-card" key={post}><div className="post-top"><div className="mini-avatar">CS</div><div><b>Café com Sardinha</b><small>@CafeComSardinha</small></div><Bookmark size={18}/></div><p>{post}</p><div className="post-footer"><span><MessageCircle size={16}/> Conversa boa</span><ArrowRight size={16}/></div></PlaceholderLink>)}</div>
+        <div className="post-grid">{visiblePosts.map((post, index) => {
+          const suit = cardSuits[index % cardSuits.length]
+          const redSuit = suit === '♥' || suit === '♦'
+          return <a className={`post-card playing-card ${redSuit ? 'red-suit' : 'blue-suit'}`} href={post.url} target="_blank" rel="noreferrer" key={post.id} aria-label={`Abrir postagem ${post.id} no X`}>
+            <span className="card-corner card-corner-top"><b>{String(post.id).padStart(2, '0')}</b><i>{suit}</i></span>
+            <div className="card-center"><span className="card-suit">{suit}</span><strong className="post-title">{post.titulo}</strong><small>Café com Sardinha</small></div>
+            <div className="post-footer"><span><MessageCircle size={15}/> Ver no X</span><ExternalLink size={15}/></div>
+            <span className="card-corner card-corner-bottom"><b>{String(post.id).padStart(2, '0')}</b><i>{suit}</i></span>
+          </a>
+        })}</div>
+        {hasMorePosts && <div className="posts-more"><button type="button" onClick={() => setVisiblePostRows(rows => rows + 2)}>Mostrar mais postagens <ChevronRight size={18}/></button><small>{visiblePosts.length} de {posts.length} postagens</small></div>}
       </section>
 
       <section className="section tinted">
@@ -153,7 +189,7 @@ function App() {
     </main>
 
     <footer>
-      <div className="footer-cta"><div><span className="eyebrow">Vamos conversar?</span><h2>Publicidade e educação financeira.</h2><p>Entre em contato para parcerias, publicidade e dúvidas.</p></div><a href="mailto:cafecomsardinha@gmail.com" className="button primary"><Mail size={18}/> cafecomsardinha@gmail.com</a></div>
+      <div className="footer-cta"><div><span className="eyebrow">Vamos conversar?</span><h2>Publicidade e Projetos.</h2><p>Entre em contato para parcerias, publicidade e dúvidas.</p></div><a href="mailto:cafecomsardinha@gmail.com" className="button primary"><Mail size={18}/> cafecomsardinha@gmail.com</a></div>
       <div className="footer-bottom"><a href="#inicio" className="wordmark"><span>CS</span>Café com Sardinha</a><p>Conteúdo educacional. Não é recomendação de investimento.</p><span>© 2026 Café com Sardinha</span></div>
     </footer>
   </div>
