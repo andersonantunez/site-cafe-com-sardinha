@@ -4,7 +4,7 @@
 
 O site Café com Sardinha é uma aplicação front-end responsiva executada inteiramente no navegador. A solução apresenta informações do perfil, simuladores, relatórios de rentabilidade, produtos, artigos, livros, frases, postagens do X e depoimentos.
 
-O projeto não utiliza back-end, banco de dados ou API própria. Os conteúdos dinâmicos disponíveis atualmente são carregados de arquivos JSON locais.
+O projeto utiliza um back-end Node.js com Express e PostgreSQL. Frases e postagens são carregadas pela API, com os arquivos JSON locais mantidos como fallback quando o servidor não estiver disponível.
 
 ## Tecnologias utilizadas
 
@@ -17,6 +17,11 @@ O projeto não utiliza back-end, banco de dados ou API própria. Os conteúdos d
 - **Lucide React:** biblioteca de ícones utilizada na interface.
 - **Google Fonts:** carregamento das famílias tipográficas Inter, Outfit e Lora.
 - **Tailwind CSS:** instalado e integrado ao processo de compilação do projeto.
+- **Node.js e Express:** API REST e servidor da aplicação em produção.
+- **PostgreSQL:** persistência das frases e postagens.
+- **node-postgres (`pg`):** pool de conexões e consultas parametrizadas ao banco.
+- **Helmet e CORS:** cabeçalhos de segurança e controle das origens permitidas.
+- **dotenv:** leitura das credenciais e configurações do arquivo `server/.env`.
 
 ## Estrutura principal
 
@@ -32,6 +37,10 @@ site-cafe-com-sardinha/
 │   ├── postagens_cafe_com_sardinha.json
 │   └── assets/
 │       └── images/
+├── server/
+│   ├── db/
+│   ├── scripts/
+│   └── src/
 └── dist/
 ```
 
@@ -118,6 +127,44 @@ useEffect(() => {
 O operador `%` faz o carrossel retornar à primeira frase após exibir a última. Os botões de navegação manual também alteram o mesmo índice.
 
 As frases são apresentadas em itálico com a fonte **Lora**, usando Georgia e serifas do sistema como alternativas caso a fonte externa não seja carregada.
+
+## Simulador PGBL x CDB
+
+A segunda página está disponível em:
+
+```text
+/simulador-pgbl-cdb
+```
+
+O núcleo matemático foi portado do script `pgbl_x_cbd.py` para JavaScript em `src/lib/pgblCdbSimulation.js`. A interface está em `src/PgblCdbSimulator.jsx`.
+
+O cálculo é executado no navegador porque não precisa de Pandas ou Matplotlib para funcionar. Essa abordagem fornece resposta imediata, mantém as premissas financeiras no dispositivo do usuário e permite que o simulador funcione mesmo quando a API estiver desligada.
+
+O simulador mantém aportes mensais em lotes separados e considera:
+
+- aporte próprio;
+- CDI anual estimado;
+- percentual do CDI de cada produto;
+- contrapartida do empregador e vesting;
+- taxas administrativas e carregamento;
+- IR regressivo da renda fixa tributável;
+- renda fixa isenta;
+- tributação regressiva ou progressiva estimada do PGBL;
+- benefício fiscal limitado pela renda tributável;
+- reinvestimento do benefício fiscal;
+- checkpoints de avaliação ou resgate efetivo.
+
+O gráfico é produzido como SVG responsivo pelo próprio React, sem biblioteca adicional. As entradas recebem validação de tipo e faixas máximas para impedir valores negativos, incompatíveis ou excessivos.
+
+As premissas são editáveis e não representam previsão ou recomendação financeira.
+
+## Simulador à vista x a prazo
+
+A página está disponível em `/simulador-avista-aprazo`. O motor em `src/lib/cashInstallmentSimulation.js` foi baseado em `avista_x_aprazo.py`, com correção da inconsistência que não descontava as parcelas do investimento.
+
+O usuário escolhe se as parcelas são pagas pela renda mensal ou retiradas do investimento. No primeiro modo, o cenário à vista investe mensalmente o equivalente à parcela, mantendo o mesmo esforço de caixa. O simulador permite configurar preço, desconto, total parcelado, entrada, quantidade de parcelas, prazo adicional, CDI, rentabilidade, taxas, carregamento, IR e momento dos fluxos.
+
+A interface apresenta gráfico, resultado líquido e memória de cálculo em PDF.
 
 ## Postagens do X
 
@@ -272,10 +319,19 @@ Como o projeto é estático, pode ser publicado em serviços como:
 
 Na hospedagem convencional, normalmente basta enviar o conteúdo gerado dentro de `dist` para a pasta pública do servidor.
 
+## Back-end e PostgreSQL
+
+O back-end está localizado em `server`. A API disponibiliza rotas REST para frases e postagens, usa consultas parametrizadas e retorna apenas registros públicos nas consultas abertas.
+
+As credenciais ficam em `server/.env`, que é ignorado pelo Git. O modelo das variáveis está em `server/.env.example`.
+
+As tabelas são criadas com `npm run db:migrate`. O comando `npm run db:seed` importa os JSONs atuais para o PostgreSQL.
+
+Durante o desenvolvimento, o Vite encaminha chamadas de `/api` para `http://127.0.0.1:3001`. O comando `npm run dev:all` inicia front-end e API simultaneamente.
+
 ## Limitações atuais
 
-- Não existe painel administrativo para atualizar conteúdos.
-- Alterações de frases e postagens exigem a edição dos arquivos JSON.
+- Não existe painel administrativo para atualizar conteúdos, embora a API já ofereça rotas CRUD.
 - O texto das postagens não é obtido automaticamente do X.
 - Simuladores, produtos, artigos, livros e depoimentos ainda contêm itens demonstrativos.
 - O formulário de contato é um link de e-mail, e não um envio processado por servidor.
@@ -290,4 +346,8 @@ Na hospedagem convencional, normalmente basta enviar o conteúdo gerado dentro d
 - incluir métricas de acesso;
 - otimizar o tamanho das imagens;
 - configurar domínio, hospedagem e SEO avançado.
+## Simulador de renda fixa
 
+A rota `/simulador-renda-fixa` oferece um fluxo em duas etapas: primeiro o valor e as projeções de IPCA, Selic e CDI para os cenários Conservador, Realista e Otimista; depois os títulos que serão comparados. O cenário Realista é selecionado por padrão. Ao adicionar ou remover um produto, o React recalcula a carteira e atualiza lista, ordenação e gráfico automaticamente.
+
+A implementação utilizada pelo site está em `src/lib/fixedIncomeSimulation.js`. Ela reproduz no navegador as fórmulas de prazo em dias úteis, IR regressivo, isenção, taxa anual e rentabilidade líquida acumulada. Assim, a página funciona sem Express, PostgreSQL ou credenciais. O módulo PostgreSQL permanece no projeto como alternativa para uma futura persistência ou conferência no servidor.

@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react'
 import { createRoot } from 'react-dom/client'
 import {
-  ArrowRight, BarChart3, BookOpen, Bookmark, Calculator, CalendarDays,
+  ArrowRight, BarChart3, BookOpen, Bookmark, Calculator, CalendarDays, Dices,
   ChevronLeft, ChevronRight, ExternalLink, Mail, MessageCircle, Package,
   HeartHandshake, PenLine, Quote, Search, ShoppingBag, Sparkles, TrendingUp,
 } from 'lucide-react'
@@ -11,11 +11,15 @@ import coffeeImage from './assets/images/cafe-quente-caricatura.png'
 import cafeProductsImage from './assets/images/produtos-cafe.png'
 import quotesData from './frases_revisadas.json'
 import postsData from './postagens_cafe_com_sardinha.json'
+import PgblCdbSimulator from './PgblCdbSimulator.jsx'
+import CashInstallmentSimulator from './CashInstallmentSimulator.jsx'
+import FixedIncomeSimulator from './FixedIncomeSimulator.jsx'
 
 const simulators = [
   { icon: BarChart3, title: 'Compare títulos de renda fixa', text: 'Coloque CDB, LCI, LCA e Tesouro lado a lado.' },
   { icon: ShoppingBag, title: 'À vista ou a prazo?', text: 'Compare o desconto à vista com o rendimento de um CDB.' },
   { icon: TrendingUp, title: 'Previdência ou CDB?', text: 'Entenda custos, impostos e resultado líquido no longo prazo.' },
+  { icon: Dices, title: 'Sorteio computacional', text: 'Faça um sorteio livre de manipulação, transparente e com relatório completo do resultado.' },
 ]
 
 const products = ['Produto 1', 'Produto 2', 'Produto 3', 'Produto 4', 'Produto 5']
@@ -27,9 +31,9 @@ const articles = [
   ['Modelo de Sorteio Computacional', 'Aleatoriedade'],
 ]
 const books = ['Livro 1', 'Livro 2', 'Livro 3', 'Livro 4']
-const posts = postsData.postagens.filter(post => post.publico)
+const fallbackPosts = postsData.postagens.filter(post => post.publico)
 const cardSuits = ['♠', '♥', '♦', '♣']
-const quotes = quotesData.frases.map(({ id, texto }) => ({ id, text: texto }))
+const fallbackQuotes = quotesData.frases.map(({ id, texto }) => ({ id, text: texto }))
 const testimonials = [
   ['Depoimento 1', '@seguidor01'], ['Depoimento 2', '@seguidor02'],
   ['Depoimento 3', '@seguidor03'], ['Depoimento 4', '@seguidor04'],
@@ -53,6 +57,8 @@ function PlaceholderLink({ children, className = '' }) {
 }
 
 function App() {
+  const [quotes, setQuotes] = useState(fallbackQuotes)
+  const [posts, setPosts] = useState(fallbackPosts)
   const [quoteIndex, setQuoteIndex] = useState(0)
   const [menuOpen, setMenuOpen] = useState(false)
   const [visiblePostRows, setVisiblePostRows] = useState(2)
@@ -63,6 +69,27 @@ function App() {
       setQuoteIndex(current => (current + 1) % quotes.length)
     }, 8000)
     return () => window.clearInterval(interval)
+  }, [quotes.length])
+
+  useEffect(() => {
+    const controller = new AbortController()
+    Promise.all([
+      fetch('/api/frases', { signal: controller.signal }).then(response => {
+        if (!response.ok) throw new Error('Falha ao carregar frases')
+        return response.json()
+      }),
+      fetch('/api/postagens', { signal: controller.signal }).then(response => {
+        if (!response.ok) throw new Error('Falha ao carregar postagens')
+        return response.json()
+      }),
+    ]).then(([apiQuotes, apiPosts]) => {
+      if (apiQuotes.length) setQuotes(apiQuotes.map(({ id, texto }) => ({ id, text: texto })))
+      setPosts(apiPosts)
+      setQuoteIndex(0)
+    }).catch(error => {
+      if (error.name !== 'AbortError') console.info('API indisponível; usando os dados locais do site.')
+    })
+    return () => controller.abort()
   }, [])
 
   useEffect(() => {
@@ -121,14 +148,14 @@ function App() {
           <p>Sou técnico em Contabilidade e Programação, formado em Web Design e Programação, com MBA em Banco de Dados Oracle e mestrado em Administração. Desenvolvo software desde os 13 anos e invisto no mercado financeiro desde 2010.</p>
           <p>Meus principais temas de interesse e atuação são Mercado Financeiro, Educação Financeira, Aleatoriedade Computacional, Estatística, Planejamento e Processos Organizacionais e Pesquisa Operacional.</p>
           <p>Tenho perfil criativo, humor ácido e boa leitura de contextos. Gosto de transformar assuntos complexos em textos claros, provocativos e acessíveis, combinando capacidade analítica com uma linguagem capaz de prender a atenção.</p>
-          <div className="topic-list"><span>Mercado financeiro</span><span>Educação financeira</span><span>Estatística</span><span>Pesquisa operacional</span><span>Programação</span><span>Marketing</span><span>Aleatoriedade computacional</span></div>
+          <div className="topic-list"><span>Mercado financeiro</span><span>Mercado imobiliário</span><span>Educação financeira</span><span>Administração</span><span>Estatística</span><span>Pesquisa operacional</span><span>Programação</span><span>Marketing</span><span>Aleatoriedade computacional</span></div>
         </div>
       </section>
 
       <section id="simuladores" className="section tinted">
         <SectionTitle eyebrow="Ferramentas" title="Simuladores" description="Decisões melhores começam com comparações honestas." />
         <div className="three-grid">{simulators.map(({ icon: Icon, title, text }, i) =>
-          <article className="sim-card" key={title}><div className="icon-box"><Icon/></div><span className="soon">Em breve</span><h3>{title}</h3><p>{text}</p><button disabled>Começar simulação <ArrowRight size={16}/></button></article>
+          <article className="sim-card" key={title}><div className="icon-box"><Icon/></div><span className="soon">{i <= 2 ? 'Disponível' : 'Em breve'}</span><h3>{title}</h3><p>{text}</p>{i === 0 ? <a className="simulator-link" href="/simulador-renda-fixa">Começar simulação <ArrowRight size={16}/></a> : i === 1 ? <a className="simulator-link" href="/simulador-avista-aprazo">Começar simulação <ArrowRight size={16}/></a> : i === 2 ? <a className="simulator-link" href="/simulador-pgbl-cdb">Começar simulação <ArrowRight size={16}/></a> : <button disabled>Simular antes de contratar <ArrowRight size={16}/></button>}</article>
         )}</div>
       </section>
 
@@ -195,4 +222,6 @@ function App() {
   </div>
 }
 
-createRoot(document.getElementById('root')).render(<React.StrictMode><App /></React.StrictMode>)
+const pages = {'/simulador-pgbl-cdb':<PgblCdbSimulator/>, '/simulador-avista-aprazo':<CashInstallmentSimulator/>, '/simulador-renda-fixa':<FixedIncomeSimulator/>}
+const page = pages[window.location.pathname] || <App/>
+createRoot(document.getElementById('root')).render(<React.StrictMode>{page}</React.StrictMode>)
