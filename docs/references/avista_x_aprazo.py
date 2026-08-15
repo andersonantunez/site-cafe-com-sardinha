@@ -1,4 +1,5 @@
-'''
+'''Script de referência usado na implementação do simulador web.
+
 Esse script tenta responder a uma pergunta simples:
 
 É melhor comprar um produto à vista com 10% de desconto ou parcelar em 12 vezes e deixar o dinheiro investido?

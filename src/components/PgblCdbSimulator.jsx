@@ -1,8 +1,9 @@
 import React, { useMemo, useState } from 'react'
 import { ArrowLeft, BarChart3, Calculator, Download, Info, RotateCcw, ShieldCheck, Trophy } from 'lucide-react'
-import { simulatePgblVsCdb } from './lib/pgblCdbSimulation.js'
+import { simulatePgblVsCdb } from '../lib/pgblCdbSimulation.js'
 import WinnerConfetti from './WinnerConfetti.jsx'
-import {pgblHelp} from './lib/simulatorFieldHelp.js'
+import FieldHelp from './FieldHelp.jsx'
+import {pgblHelp} from '../lib/simulatorFieldHelp.js'
 
 const initialValues = {
   startDate: '2025-01-01', months: 120, monthlyContribution: 500,
@@ -17,7 +18,7 @@ const money = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL
 const percent = value => `${Number(value).toLocaleString('pt-BR', { maximumFractionDigits: 2 })}%`
 
 function Field({ label, name, values, errors, onChange, type = 'number', min, max, step = '0.01', hint, children }) {
-  return <label className={`sim-field ${errors[name] ? 'invalid' : ''}`} data-help={pgblHelp[name]}><span>{label}</span>
+  return <label className={`sim-field ${errors[name] ? 'invalid' : ''}`}><span>{label}</span><FieldHelp text={pgblHelp[name]}/>
     {children || <input type={type} name={name} value={values[name]} min={min} max={max} step={step} onChange={onChange} aria-invalid={Boolean(errors[name])}/>} 
     {errors[name] ? <small className="field-error">{errors[name]}</small> : hint && <small>{hint}</small>}
   </label>
@@ -65,7 +66,7 @@ export default function PgblCdbSimulator() {
   }
   const reset = () => { setValues(initialValues); setSubmitted(initialValues); setErrors({}) }
   const downloadReport = async () => {
-    const { generatePgblCdbPdf } = await import('./lib/pgblCdbReport.js')
+    const { generatePgblCdbPdf } = await import('../lib/pgblCdbReport.js')
     generatePgblCdbPdf(result, submitted)
   }
 

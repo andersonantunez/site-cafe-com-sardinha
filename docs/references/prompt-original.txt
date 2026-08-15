@@ -1,3 +1,5 @@
+Prompt original de referência do projeto.
+
 Crie um site clean que seja uma extensão da minha página do X: https://x.com/CafeComSardinha
 Use um System Design tailwindcss
 

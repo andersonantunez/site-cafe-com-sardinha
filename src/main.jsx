@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react'
 import { createRoot } from 'react-dom/client'
 import {
-  ArrowRight, BarChart3, BookOpen, Bookmark, Calculator, CalendarDays, Dices,
+  ArrowRight, BarChart3, BookOpen, Bookmark, Calculator, Dices,
   ChevronLeft, ChevronRight, ExternalLink, Mail, MessageCircle, Package,
   HeartHandshake, PenLine, Quote, Search, ShoppingBag, Sparkles, TrendingUp,
 } from 'lucide-react'
@@ -9,11 +9,12 @@ import './styles.css'
 import logoImage from './assets/images/logo3.png'
 import coffeeImage from './assets/images/cafe-quente-caricatura.png'
 import cafeProductsImage from './assets/images/produtos-cafe.png'
-import quotesData from './frases_revisadas.json'
-import postsData from './postagens_cafe_com_sardinha.json'
-import PgblCdbSimulator from './PgblCdbSimulator.jsx'
-import CashInstallmentSimulator from './CashInstallmentSimulator.jsx'
-import FixedIncomeSimulator from './FixedIncomeSimulator.jsx'
+import quotesData from './data/frases.json'
+import postsData from './data/postagens.json'
+import PgblCdbSimulator from './components/PgblCdbSimulator.jsx'
+import CashInstallmentSimulator from './components/CashInstallmentSimulator.jsx'
+import FixedIncomeSimulator from './components/FixedIncomeSimulator.jsx'
+import PerformanceHistory, { PerformanceIndicators } from './components/PerformanceHistory.jsx'
 
 const simulators = [
   { icon: BarChart3, title: 'Compare títulos de renda fixa', text: 'Coloque CDB, LCI, LCA e Tesouro lado a lado.' },
@@ -39,7 +40,6 @@ const testimonials = [
   ['Depoimento 3', '@seguidor03'], ['Depoimento 4', '@seguidor04'],
   ['Depoimento 5', '@seguidor05'],
 ]
-const returns = ['Maio de 2026', 'Junho de 2026', 'Julho de 2026', 'Agosto de 2026']
 
 function SectionTitle({ eyebrow, title, description, action }) {
   return <div className="section-heading">
@@ -105,7 +105,7 @@ function App() {
     <nav className="topbar">
       <a href="#inicio" className="wordmark"><span>CS</span>Café com Sardinha</a>
       <div className={`nav-links ${menuOpen ? 'open' : ''}`}>
-        <a href="#sobre">Sobre</a><a href="#simuladores">Simuladores</a><a href="#rentabilidade">Rentabilidade</a><a href="#achadinhos">Achadinhos do Café</a><a href="#conteudos">Conteúdos</a>
+        <a href="#sobre">Sobre</a><a href="#simuladores">Simuladores</a><a href="/historico-rentabilidade">Histórico de Rentabilidade</a><a href="#achadinhos">Achadinhos do Café</a><a href="#conteudos">Conteúdos</a>
       </div>
       <a className="x-button" href="https://x.com/CafeComSardinha" target="_blank" rel="noreferrer">Perfil no X <ExternalLink size={15}/></a>
       <button className="menu-button" onClick={() => setMenuOpen(!menuOpen)} aria-label="Abrir menu">{menuOpen ? '×' : '☰'}</button>
@@ -155,13 +155,13 @@ function App() {
       <section id="simuladores" className="section tinted">
         <SectionTitle eyebrow="Ferramentas" title="Simuladores" description="Decisões melhores começam com comparações honestas." />
         <div className="three-grid">{simulators.map(({ icon: Icon, title, text }, i) =>
-          <article className="sim-card" key={title}><div className="icon-box"><Icon/></div><span className="soon">{i <= 2 ? 'Disponível' : 'Em breve'}</span><h3>{title}</h3><p>{text}</p>{i === 0 ? <a className="simulator-link" href="/simulador-renda-fixa">Começar simulação <ArrowRight size={16}/></a> : i === 1 ? <a className="simulator-link" href="/simulador-avista-aprazo">Começar simulação <ArrowRight size={16}/></a> : i === 2 ? <a className="simulator-link" href="/simulador-pgbl-cdb">Começar simulação <ArrowRight size={16}/></a> : <button disabled>Simular antes de contratar <ArrowRight size={16}/></button>}</article>
+          <article className="sim-card" key={title}><div className="icon-box"><Icon/></div><span className="soon">Disponível</span><h3>{title}</h3><p>{text}</p>{i === 0 ? <a className="simulator-link" href="/simulador-renda-fixa">Começar simulação <ArrowRight size={16}/></a> : i === 1 ? <a className="simulator-link" href="/simulador-avista-aprazo">Começar simulação <ArrowRight size={16}/></a> : i === 2 ? <a className="simulator-link" href="/simulador-pgbl-cdb">Começar simulação <ArrowRight size={16}/></a> : <a className="simulator-link" href="https://melhorsorteio.com.br/" target="_blank" rel="noreferrer">Acessar Melhor Sorteio <ExternalLink size={16}/></a>}</article>
         )}</div>
       </section>
 
       <section id="rentabilidade" className="section returns-section">
-        <div className="returns-intro"><span className="eyebrow">Transparência</span><h2>Rentabilidade mensal</h2><p>Acompanhe a rentabilidade mensal divulgada e a evolução dos resultados ao longo do ano.</p></div>
-        <div className="returns-list">{returns.map((month, i) => <PlaceholderLink className="return-row" key={month}><span className="calendar"><CalendarDays/></span><div><small>Relatório mensal</small><h3>{month}</h3></div><span className={i === returns.length - 1 ? 'status latest' : 'status'}>{i === returns.length - 1 ? 'Mais recente' : 'Publicado'}</span><ArrowRight/></PlaceholderLink>)}</div>
+        <div className="returns-intro"><span className="eyebrow">Transparência</span><h2>Histórico de Rentabilidade</h2><p>Resultados anuais consolidados, desempenho em relação ao CDI e evolução acumulada da carteira.</p><a className="simulator-link history-link" href="/historico-rentabilidade">Ver histórico completo <ArrowRight size={16}/></a></div>
+        <PerformanceIndicators/>
       </section>
 
       <section id="achadinhos" className="section tinted">
@@ -222,6 +222,6 @@ function App() {
   </div>
 }
 
-const pages = {'/simulador-pgbl-cdb':<PgblCdbSimulator/>, '/simulador-avista-aprazo':<CashInstallmentSimulator/>, '/simulador-renda-fixa':<FixedIncomeSimulator/>}
+const pages = {'/simulador-pgbl-cdb':<PgblCdbSimulator/>, '/simulador-avista-aprazo':<CashInstallmentSimulator/>, '/simulador-renda-fixa':<FixedIncomeSimulator/>, '/historico-rentabilidade':<PerformanceHistory/>}
 const page = pages[window.location.pathname] || <App/>
 createRoot(document.getElementById('root')).render(<React.StrictMode>{page}</React.StrictMode>)

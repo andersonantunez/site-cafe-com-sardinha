@@ -1,4 +1,4 @@
-'''
+'''Script de referência usado na implementação do simulador web.
 
 O que ele compara
 

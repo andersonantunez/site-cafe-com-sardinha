@@ -1,7 +1,7 @@
 import React,{useEffect,useMemo,useRef,useState} from 'react'
 import {ArrowLeft,ArrowRight,BarChart3,Calculator,Info,Pencil,Plus,Trash2,X} from 'lucide-react'
-import {simulateFixedIncome} from './lib/fixedIncomeSimulation.js'
-import {fixedHelp} from './lib/simulatorFieldHelp.js'
+import {simulateFixedIncome} from '../lib/fixedIncomeSimulation.js'
+import {fixedHelp} from '../lib/simulatorFieldHelp.js'
 
 const money=new Intl.NumberFormat('pt-BR',{style:'currency',currency:'BRL'}),pct=new Intl.NumberFormat('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:4})
 const today=new Date().toISOString().slice(0,10),future=new Date(new Date().setFullYear(new Date().getFullYear()+2)).toISOString().slice(0,10)
@@ -15,7 +15,7 @@ function Chart({rows}){if(!rows.length)return null;const max=Math.max(...rows.ma
 export default function FixedIncomeSimulator(){
  const[premises,setPremises]=useState(defaults),[step,setStep]=useState(1),[draft,setDraft]=useState(blank),[products,setProducts]=useState([]),[editingId,setEditingId]=useState(null),[scenario,setScenario]=useState('realistic'),[sort,setSort]=useState('net-desc'),[error,setError]=useState(''),formRef=useRef(null)
  const options=fallback
- useEffect(()=>{const helpByLabel={'Valor do investimento (R$)':fixedHelp.investment,IPCA:fixedHelp.scenario,SELIC:fixedHelp.scenario,CDI:fixedHelp.scenario,'Tipo de título':fixedHelp.titleType,Rentabilidade:fixedHelp.format,'Taxa oferecida (%)':fixedHelp.rate,Emissor:fixedHelp.issuer,'Data da aplicação':fixedHelp.applicationDate,'Data do vencimento':fixedHelp.maturityDate};document.querySelectorAll('.fixed-income-page .sim-field').forEach(field=>{const label=field.querySelector(':scope > span')?.textContent?.trim();if(helpByLabel[label])field.dataset.help=helpByLabel[label]})},[step,editingId])
+ useEffect(()=>{const helpByLabel={'Valor do investimento (R$)':fixedHelp.investment,IPCA:fixedHelp.scenario,SELIC:fixedHelp.scenario,CDI:fixedHelp.scenario,'Tipo de título':fixedHelp.titleType,Rentabilidade:fixedHelp.format,'Taxa oferecida (%)':fixedHelp.rate,Emissor:fixedHelp.issuer,'Data da aplicação':fixedHelp.applicationDate,'Data do vencimento':fixedHelp.maturityDate};const tips=[];document.querySelectorAll('.fixed-income-page .sim-field').forEach(field=>{const label=field.querySelector(':scope > span')?.textContent?.trim(),text=helpByLabel[label];if(!text)return;const help=document.createElement('span'),tooltip=document.createElement('span');help.className='field-help';help.tabIndex=0;help.setAttribute('role','button');help.setAttribute('aria-label','Mostrar explicação deste campo');help.textContent='?';tooltip.className='field-help-tooltip';tooltip.setAttribute('role','tooltip');tooltip.textContent=text;help.appendChild(tooltip);help.addEventListener('click',event=>event.preventDefault());field.appendChild(help);tips.push(help)});return()=>tips.forEach(tip=>tip.remove())},[step,editingId])
  const results=useMemo(()=>simulateFixedIncome({...premises,products,options}),[premises,products])
  const selected=useMemo(()=>{const id={conservative:1,realistic:2,optimistic:3}[scenario];return results.filter(r=>+r.id_cenario===id).sort((a,b)=>sort==='net-desc'?+b.vr_liquido_acumulado- +a.vr_liquido_acumulado:sort==='rate-desc'?+b.pc_taxa_liquida_acumulada- +a.pc_taxa_liquida_acumulada:sort==='maturity'?String(a.dt_vencimento).localeCompare(String(b.dt_vencimento)):String(a.nm_emissor).localeCompare(String(b.nm_emissor),'pt-BR'))},[results,scenario,sort])
  const setIndex=(s,i,v)=>setPremises(p=>({...p,scenarios:{...p.scenarios,[s]:{...p.scenarios[s],[i]:v}}}))

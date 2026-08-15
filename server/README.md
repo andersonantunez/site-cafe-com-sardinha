@@ -11,7 +11,6 @@ Back-end Node.js, Express e PostgreSQL.
 
 ```bash
 npm install
-npm --prefix server install
 npm run db:migrate
 npm run db:seed
 npm run dev:all

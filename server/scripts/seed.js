@@ -19,8 +19,8 @@ function parseBrazilianDate(value) {
 const client = await pool.connect()
 try {
   const [frasesData, postagensData] = await Promise.all([
-    readJson('src/frases_revisadas.json'),
-    readJson('src/postagens_cafe_com_sardinha.json'),
+    readJson('src/data/frases.json'),
+    readJson('src/data/postagens.json'),
   ])
 
   await client.query('BEGIN')

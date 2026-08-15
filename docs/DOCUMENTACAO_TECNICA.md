@@ -33,10 +33,12 @@ site-cafe-com-sardinha/
 ├── src/
 │   ├── main.jsx
 │   ├── styles.css
-│   ├── frases_revisadas.json
-│   ├── postagens_cafe_com_sardinha.json
-│   └── assets/
-│       └── images/
+│   ├── components/
+│   ├── data/
+│   │   ├── frases.json
+│   │   └── postagens.json
+│   ├── lib/
+│   └── assets/images/
 ├── server/
 │   ├── db/
 │   ├── scripts/
@@ -63,7 +65,7 @@ Documento HTML inicial. Contém:
 - banner e identificação do perfil;
 - apresentação;
 - simuladores;
-- rentabilidade mensal;
+- histórico de rentabilidade anual e mensal;
 - Achadinhos do Café;
 - artigos e livros;
 - carrossel de frases;
@@ -98,13 +100,13 @@ Durante a compilação, o Vite processa esses arquivos e gera versões com nomes
 As frases ficam armazenadas em:
 
 ```text
-src/frases_revisadas.json
+src/data/frases.json
 ```
 
 O arquivo é importado diretamente pelo React:
 
 ```jsx
-import quotesData from './frases_revisadas.json'
+import quotesData from './data/frases.json'
 
 const quotes = quotesData.frases.map(({ id, texto }) => ({
   id,
@@ -136,7 +138,7 @@ A segunda página está disponível em:
 /simulador-pgbl-cdb
 ```
 
-O núcleo matemático foi portado do script `pgbl_x_cbd.py` para JavaScript em `src/lib/pgblCdbSimulation.js`. A interface está em `src/PgblCdbSimulator.jsx`.
+O núcleo matemático foi portado do script `docs/references/pgbl_x_cdb.py` para JavaScript em `src/lib/pgblCdbSimulation.js`. A interface está em `src/components/PgblCdbSimulator.jsx`.
 
 O cálculo é executado no navegador porque não precisa de Pandas ou Matplotlib para funcionar. Essa abordagem fornece resposta imediata, mantém as premissas financeiras no dispositivo do usuário e permite que o simulador funcione mesmo quando a API estiver desligada.
 
@@ -160,7 +162,7 @@ As premissas são editáveis e não representam previsão ou recomendação fina
 
 ## Simulador à vista x a prazo
 
-A página está disponível em `/simulador-avista-aprazo`. O motor em `src/lib/cashInstallmentSimulation.js` foi baseado em `avista_x_aprazo.py`, com correção da inconsistência que não descontava as parcelas do investimento.
+A página está disponível em `/simulador-avista-aprazo`. O motor em `src/lib/cashInstallmentSimulation.js` foi baseado em `docs/references/avista_x_aprazo.py`, com correção da inconsistência que não descontava as parcelas do investimento.
 
 O usuário escolhe se as parcelas são pagas pela renda mensal ou retiradas do investimento. No primeiro modo, o cenário à vista investe mensalmente o equivalente à parcela, mantendo o mesmo esforço de caixa. O simulador permite configurar preço, desconto, total parcelado, entrada, quantidade de parcelas, prazo adicional, CDI, rentabilidade, taxas, carregamento, IR e momento dos fluxos.
 
@@ -171,7 +173,7 @@ A interface apresenta gráfico, resultado líquido e memória de cálculo em PDF
 Os dados das postagens ficam em:
 
 ```text
-src/postagens_cafe_com_sardinha.json
+src/data/postagens.json
 ```
 
 Cada registro possui:

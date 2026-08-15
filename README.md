@@ -5,13 +5,18 @@ Aplicação full-stack com React, Vite, Node.js, Express e PostgreSQL.
 ## Estrutura
 
 ```text
-├── src/                 # Front-end React
-├── server/              # API Express
+├── docs/                # Documentação e códigos usados como referência
+├── server/              # API Express (workspace npm)
 │   ├── db/              # Migrações SQL
 │   ├── scripts/         # Migração e importação inicial
 │   └── src/             # Configuração, rotas e acesso ao PostgreSQL
-├── dist/                # Build de produção
-├── package.json         # Scripts gerais/front-end
+├── src/                 # Front-end React
+│   ├── assets/          # Imagens e outros arquivos estáticos
+│   ├── components/      # Componentes e simuladores React
+│   ├── data/            # Dados JSON usados como fallback
+│   └── lib/             # Cálculos, relatórios e utilitários
+├── index.html           # Entrada HTML do Vite
+├── package.json         # Scripts gerais e configuração dos workspaces
 └── vite.config.js       # Vite e proxy /api
 ```
 
@@ -33,12 +38,15 @@ Você pode usar `DATABASE_URL` ou os campos `PGHOST`, `PGPORT`, `PGDATABASE`, `P
 
 ## Primeira execução
 
-As dependências já podem ser instaladas com:
+Instale todas as dependências do front-end e da API com um único comando:
 
 ```bash
 npm install
-npm --prefix server install
 ```
+
+O projeto usa npm workspaces. Por isso, as dependências são centralizadas em
+`node_modules/` na raiz; não é necessário manter outro `node_modules` dentro de
+`server/`.
 
 Crie as tabelas e importe os JSONs atuais:
 
@@ -58,6 +66,7 @@ npm run dev:all
 - Saúde da API: `http://127.0.0.1:3001/api/health`
 - Simulador PGBL x CDB: `http://127.0.0.1:5173/simulador-pgbl-cdb`
 - Simulador à vista x a prazo: `http://127.0.0.1:5173/simulador-avista-aprazo`
+- Sorteio computacional: produto independente em `https://melhorsorteio.com.br/`.
 
 ## Scripts
 
