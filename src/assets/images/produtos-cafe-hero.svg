@@ -1,0 +1,44 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 620 390" role="img" aria-labelledby="title desc">
+  <title id="title">Produtos Café com Sardinha</title>
+  <desc id="desc">Ilustração simples de camiseta, boné e caneca</desc>
+
+  <circle cx="310" cy="195" r="160" fill="#f3a04a" opacity=".13"/>
+  <circle cx="310" cy="195" r="125" fill="#f3a04a" opacity=".1"/>
+
+  <!-- Camiseta -->
+  <g stroke="#f3a04a" stroke-width="7" stroke-linejoin="round">
+    <path d="M210 105l70-31c10 22 50 22 60 0l70 31 48 72-54 31-24-37v151H240V171l-24 37-54-31z" fill="#17658f"/>
+    <path d="M280 75c8 25 52 25 60 0" fill="none" stroke="#f8e7cf" stroke-width="10" stroke-linecap="round"/>
+  </g>
+  <g transform="translate(310 213)">
+    <circle r="48" fill="#f8e7cf"/>
+    <path d="M-24-5h48c0 28-10 40-24 40S-24 23-24-5z" fill="#74442c"/>
+    <path d="M-19-17c11-12 27-12 38 0" fill="none" stroke="#f3a04a" stroke-width="8" stroke-linecap="round"/>
+    <path d="M-8 12c6 5 12 5 18 0-3 12-15 12-18 0z" fill="#17658f"/>
+  </g>
+
+  <!-- Caneca -->
+  <g transform="translate(54 190) rotate(-7)" stroke="#f8e7cf" stroke-width="7" stroke-linejoin="round">
+    <path d="M25 26h128v137c0 25-19 43-43 43H68c-24 0-43-18-43-43z" fill="#d87527"/>
+    <path d="M153 58h22c49 0 49 91 0 91h-22" fill="none" stroke-width="18"/>
+    <path d="M153 58h22c49 0 49 91 0 91h-22" fill="none" stroke="#d87527" stroke-width="9"/>
+    <ellipse cx="89" cy="28" rx="64" ry="16" fill="#f8e7cf"/>
+    <ellipse cx="89" cy="30" rx="51" ry="9" fill="#59331f" stroke="none"/>
+    <path d="M66 105c14-15 31-15 45 0-14 14-31 14-45 0zm0 0-14-10v20z" fill="#164e72" stroke="none"/>
+  </g>
+
+  <!-- Boné -->
+  <g transform="translate(390 42) rotate(7)" stroke="#f3a04a" stroke-width="7" stroke-linejoin="round">
+    <path d="M16 75c17-58 131-69 169 0v70H18z" fill="#684127"/>
+    <path d="M20 143c61-14 128-2 176 32-62 15-125 8-176-16z" fill="#4a2b1d"/>
+    <path d="M101 25v118M42 58c36 17 81 17 119 0" fill="none" stroke="#86593a" stroke-width="4"/>
+    <circle cx="101" cy="91" r="30" fill="#f8e7cf" stroke="#17658f" stroke-width="6"/>
+    <path d="M85 91h32M101 75v32" stroke="#d87527" stroke-width="7" stroke-linecap="round"/>
+  </g>
+
+  <g fill="#f3a04a">
+    <circle cx="84" cy="89" r="7"/><circle cx="528" cy="296" r="7"/>
+    <path d="M118 64l6 13 13 6-13 6-6 13-6-13-13-6 13-6z"/>
+    <path d="M544 224l6 13 13 6-13 6-6 13-6-13-13-6 13-6z"/>
+  </g>
+</svg>

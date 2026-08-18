@@ -52,8 +52,6 @@ export const annualPerformance = Object.values(monthlyPerformance.reduce((years,
     monthsAboveCdi: year.months.filter(month => month.portfolio > month.cdi).length,
     monthsBelowCdi: year.months.filter(month => month.portfolio < month.cdi).length,
     monthsEqualCdi: year.months.filter(month => month.portfolio === month.cdi).length,
-    positiveMonths: year.months.filter(month => month.portfolio > 0).length,
-    averageMonth: year.months.reduce((total, month) => total + month.portfolio, 0) / year.months.length,
     bestMonth: year.months.reduce((best, month) => month.portfolio > best.portfolio ? month : best),
     worstMonth: year.months.reduce((worst, month) => month.portfolio < worst.portfolio ? month : worst),
   }
@@ -68,8 +66,6 @@ export const performancePeriod = {
   monthsAboveCdi: monthlyPerformance.filter(month => month.portfolio > month.cdi).length,
   monthsBelowCdi: monthlyPerformance.filter(month => month.portfolio < month.cdi).length,
   monthsEqualCdi: monthlyPerformance.filter(month => month.portfolio === month.cdi).length,
-  positiveMonths: monthlyPerformance.filter(month => month.portfolio > 0).length,
-  averageMonth: monthlyPerformance.reduce((total, month) => total + month.portfolio, 0) / monthlyPerformance.length,
   bestMonth: monthlyPerformance.reduce((best, month) => month.portfolio > best.portfolio ? month : best),
   worstMonth: monthlyPerformance.reduce((worst, month) => month.portfolio < worst.portfolio ? month : worst),
 }

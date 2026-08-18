@@ -15,6 +15,7 @@ import PgblCdbSimulator from './components/PgblCdbSimulator.jsx'
 import CashInstallmentSimulator from './components/CashInstallmentSimulator.jsx'
 import FixedIncomeSimulator from './components/FixedIncomeSimulator.jsx'
 import PerformanceHistory, { PerformanceIndicators } from './components/PerformanceHistory.jsx'
+import CafeProducts from './components/CafeProducts.jsx'
 
 const simulators = [
   { icon: BarChart3, title: 'Compare títulos de renda fixa', text: 'Coloque CDB, LCI, LCA e Tesouro lado a lado.' },
@@ -170,9 +171,9 @@ function App() {
           <div className="product-grid">{products.map((name, i) => <PlaceholderLink key={name} className="product-card"><div className="product-visual"><Package size={34}/><span>0{i+1}</span></div><small>Indicação do Café</small><h3>{name}</h3><span className="amazon-link">Ver na Amazon <ExternalLink size={14}/></span></PlaceholderLink>)}</div>
         </div>
         <div className="brand-products">
-          <div className="brand-products-heading"><div><span className="eyebrow">Nossa marca</span><h2>Produtos do Café</h2><p>Canecas, bonés, camisetas e moletons com a identidade Café com Sardinha.</p></div><div className="charity-seal"><HeartHandshake size={28}/><span><strong>Lucro 100% solidário</strong>Todo o lucro será revertido para instituições de caridade.</span></div></div>
-          <figure className="brand-products-showcase"><img src={cafeProductsImage} alt="Coleção de canecas, bonés, camisetas e moletons Café com Sardinha" /></figure>
-          <div className="brand-products-footer"><p>Vista a marca. Espalhe a ideia. Ajude quem precisa.</p><span className="soon product-launch">Em breve</span></div>
+          <div className="brand-products-heading"><div><span className="eyebrow">Nossa marca</span><h2><a href="/produtos-do-cafe">Produtos do Café</a></h2><p>Canecas, bonés, camisetas e moletons com a identidade Café com Sardinha.</p></div><div className="charity-seal"><HeartHandshake size={28}/><span><strong>Lucro 100% solidário</strong>Todo o lucro será revertido para instituições de caridade.</span></div></div>
+          <a className="brand-products-showcase" href="/produtos-do-cafe"><img src={cafeProductsImage} alt="Coleção de canecas, bonés, camisetas e moletons Café com Sardinha" /></a>
+          <div className="brand-products-footer"><p>Vista a marca. Espalhe a ideia. Ajude quem precisa.</p><a className="soon product-launch" href="/produtos-do-cafe">Conhecer coleção</a></div>
         </div>
       </section>
 
@@ -222,6 +223,6 @@ function App() {
   </div>
 }
 
-const pages = {'/simulador-pgbl-cdb':<PgblCdbSimulator/>, '/simulador-avista-aprazo':<CashInstallmentSimulator/>, '/simulador-renda-fixa':<FixedIncomeSimulator/>, '/historico-rentabilidade':<PerformanceHistory/>}
+const pages = {'/simulador-pgbl-cdb':<PgblCdbSimulator/>, '/simulador-avista-aprazo':<CashInstallmentSimulator/>, '/simulador-renda-fixa':<FixedIncomeSimulator/>, '/historico-rentabilidade':<PerformanceHistory/>, '/produtos-do-cafe':<CafeProducts/>}
 const page = pages[window.location.pathname] || <App/>
 createRoot(document.getElementById('root')).render(<React.StrictMode>{page}</React.StrictMode>)

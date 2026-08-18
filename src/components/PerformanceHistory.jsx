@@ -8,9 +8,12 @@ const tone = value => value < 0 ? 'negative' : 'positive'
 
 export function PerformanceIndicators() {
   const relative = performancePeriod.cdi ? performancePeriod.accumulated / performancePeriod.cdi * 100 : null
+  const fullYears = Math.floor(performancePeriod.months / 12)
+  const remainingMonths = performancePeriod.months % 12
+  const duration = `${performancePeriod.months} meses · ${fullYears} ${fullYears === 1 ? 'ano' : 'anos'}${remainingMonths ? ` e ${remainingMonths} ${remainingMonths === 1 ? 'mês' : 'meses'}` : ''}`
   return <section className="performance-summary performance-summary-complete" aria-label="Indicadores gerais de rentabilidade">
     <div className="indicator-group indicator-financial">
-      <article><BarChart3/><span>Rentabilidade no período</span><strong className={tone(performancePeriod.accumulated)}>{percent(performancePeriod.accumulated)}</strong></article>
+      <article><BarChart3/><span>Rentabilidade no período</span><strong className={tone(performancePeriod.accumulated)}>{percent(performancePeriod.accumulated)}</strong><small>{duration}</small></article>
       <article><ShieldCheck/><span>CDI no período</span><strong>{percent(performancePeriod.cdi)}</strong></article>
       <article><TrendingUp/><span>Desempenho</span><strong>{relative === null ? '—' : `${percent(relative)} do CDI`}</strong></article>
     </div>
@@ -19,13 +22,9 @@ export function PerformanceIndicators() {
       <article><span>Abaixo do CDI</span><strong className={performancePeriod.monthsBelowCdi ? 'negative' : ''}>{performancePeriod.monthsBelowCdi}</strong></article>
       <article><span>Iguais ao CDI</span><strong>{performancePeriod.monthsEqualCdi}</strong></article>
     </div>
-    <div className="indicator-group indicator-months">
-      <article><span>Meses computados</span><strong>{performancePeriod.months}</strong></article>
-      <article><span>Meses positivos</span><strong>{performancePeriod.positiveMonths}</strong></article>
-    </div>
     <div className="indicator-group indicator-extremes">
       <article><span>Melhor mês</span><strong className="positive">{performancePeriod.bestMonth.label} · {percent(performancePeriod.bestMonth.portfolio)}</strong></article>
-      <article><span>Pior mês</span><strong className={tone(performancePeriod.worstMonth.portfolio)}>{performancePeriod.worstMonth.label} · {percent(performancePeriod.worstMonth.portfolio)}</strong></article>
+      <article><span>Pior mês</span><strong className="negative">{performancePeriod.worstMonth.label} · {percent(performancePeriod.worstMonth.portfolio)}</strong></article>
     </div>
   </section>
 }
@@ -52,13 +51,9 @@ export function AnnualPerformanceTable({ compact = false }) {
               <article><span>Abaixo do CDI</span><strong className={year.monthsBelowCdi ? 'negative' : ''}>{year.monthsBelowCdi}</strong></article>
               <article><span>Iguais ao CDI</span><strong>{year.monthsEqualCdi}</strong></article>
             </div>
-            <div className="year-indicator-group months-group">
-              <article><span>Meses computados</span><strong>{year.months.length}</strong></article>
-              <article><span>Meses positivos</span><strong>{year.positiveMonths}</strong></article>
-            </div>
             <div className="year-indicator-group extremes-group">
               <article><span>Melhor mês</span><strong className="positive">{year.bestMonth.month} · {percent(year.bestMonth.portfolio)}</strong></article>
-              <article><span>Pior mês</span><strong className={tone(year.worstMonth.portfolio)}>{year.worstMonth.month} · {percent(year.worstMonth.portfolio)}</strong></article>
+              <article><span>Pior mês</span><strong className="negative">{year.worstMonth.month} · {percent(year.worstMonth.portfolio)}</strong></article>
             </div>
           </div>
           <div className="monthly-heading"><span>Competência</span><span>Carteira</span><span>CDI</span><span>% do CDI</span></div>
@@ -77,8 +72,8 @@ export default function PerformanceHistory() {
     <section className="performance-hero"><div><span className="eyebrow">Transparência</span><h1>Histórico de Rentabilidade</h1><p>Acompanhe a evolução da carteira de {first} a {last}, com resultados consolidados por ano e detalhamento mensal.</p></div><TrendingUp/></section>
     <main className="performance-main">
       <PerformanceIndicators/>
-      <PortfolioDetails/>
       <section className="history-panel"><div className="history-heading"><div><span className="eyebrow">Consolidado anual</span><h2>Rentabilidade de cima para baixo</h2></div><p>Os resultados anuais e acumulados são calculados por capitalização composta dos percentuais mensais.</p></div><AnnualPerformanceTable/></section>
+      <PortfolioDetails/>
       <p className="performance-disclaimer">Rentabilidade passada não representa garantia de resultados futuros. Os dados foram extraídos do histórico disponibilizado pelo BTG e reorganizados para facilitar a leitura.</p>
     </main>
   </div>
