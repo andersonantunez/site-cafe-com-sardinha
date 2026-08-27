@@ -1,5 +1,5 @@
 import { Router } from 'express'
-import { query } from '../db.js'
+import { query } from '../config/database.js'
 
 export const rendaFixaRouter = Router()
 const fail=(message,status=400)=>Object.assign(new Error(message),{status})

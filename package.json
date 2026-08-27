@@ -11,11 +11,14 @@
     "dev:web": "vite",
     "dev:server": "npm run dev --workspace=server",
     "dev:all": "concurrently -n WEB,API -c cyan,yellow \"npm run dev:web\" \"npm run dev:server\"",
+    "portfolio:generate": "node scripts/generatePortfolioAssets.mjs",
     "build": "vite build",
+    "test": "node --test --test-isolation=none tests/*.test.js",
     "preview": "vite preview",
     "start": "npm start --workspace=server",
     "db:migrate": "npm run db:migrate --workspace=server",
-    "db:seed": "npm run db:seed --workspace=server"
+    "db:seed": "npm run db:seed --workspace=server",
+    "db:import-performance": "npm run db:import-performance --workspace=server"
   },
   "dependencies": {
     "@tailwindcss/vite": "latest",

@@ -1,8 +1,8 @@
 from pathlib import Path
 from PIL import Image, ImageEnhance, ImageFilter
 
-ROOT = Path(__file__).resolve().parents[1]
-BASE_DIR = ROOT / ".tmp-product-bases"
+ROOT = Path(__file__).resolve().parents[2]
+BASE_DIR = Path(__file__).resolve().parent / "source"
 OUT_DIR = ROOT / "src/assets/images/products"
 LOGO_PATH = Path(r"C:\Users\Admin\Desktop\3c0590d7-ea48-4c22-ab8c-02d6ee7fd187.png")
 

@@ -1,0 +1,47 @@
+• Implementei a área autenticada em:
+
+  http://localhost:5173/minha-carteira
+
+  Incluído:
+
+  - Cadastro e login por e-mail/senha.
+  - Senhas protegidas com scrypt.
+  - Sessões assinadas com validade de sete dias.
+  - Login pelo Google configurável.
+  - Isolamento da carteira por usuário.
+  - Importação transacional do Ativos.txt.
+  - Preservação das 15 colunas originais.
+  - Todos os gráficos e insights da carteira publicada.
+  - Reprocessamento automático após cada importação.
+  - Tabelas de usuários, importações e títulos.
+  - Campos de auditoria e exclusão lógica.
+  - Validação do formato e de códigos duplicados.
+
+  Também validei:
+
+  - As rotas e arquivos do backend não possuem erros de sintaxe.
+  - O parser importou corretamente os 86 títulos do arquivo atual.
+  - Hash de senha e validação de sessão funcionam.
+  - O frontend foi processado pelo Vite.
+
+  Para ativar efetivamente os logins, ainda faltam configurações externas que não existem no projeto local:
+
+  - Criar server/.env com as credenciais do PostgreSQL.
+  - Definir uma chave segura em AUTH_SECRET.
+  - Executar npm run db:migrate.
+  - Informar GOOGLE_CLIENT_ID para habilitar o botão do Google.
+
+  Sem server/.env, a API continua desligada; por isso cadastro, login e importação ainda não conseguem persistir dados localmente.
+
+
+
+npm run build
+
+npm run dev:all
+
+netstat -ano | findstr LISTENING | findstr ":5173 :3001"
+
+taskkill /PID 18380 /F
+taskkill /PID 15036 /F
+
+npm run dev:all

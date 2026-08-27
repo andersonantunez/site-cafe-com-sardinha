@@ -3,19 +3,22 @@ import { createRoot } from 'react-dom/client'
 import {
   ArrowRight, BarChart3, BookOpen, Bookmark, Calculator, Dices,
   ChevronLeft, ChevronRight, ExternalLink, Mail, MessageCircle, Package,
-  HeartHandshake, PenLine, Quote, Search, ShoppingBag, Sparkles, TrendingUp,
+  Code2, HeartHandshake, LogIn, Megaphone, Quote, Search, ShoppingBag, Sparkles, TrendingUp, GraduationCap,
 } from 'lucide-react'
 import './styles.css'
 import logoImage from './assets/images/logo3.png'
-import coffeeImage from './assets/images/cafe-quente-caricatura.png'
 import cafeProductsImage from './assets/images/produtos-cafe.png'
-import quotesData from './data/frases.json'
-import postsData from './data/postagens.json'
 import PgblCdbSimulator from './components/PgblCdbSimulator.jsx'
 import CashInstallmentSimulator from './components/CashInstallmentSimulator.jsx'
 import FixedIncomeSimulator from './components/FixedIncomeSimulator.jsx'
 import PerformanceHistory, { PerformanceIndicators } from './components/PerformanceHistory.jsx'
 import CafeProducts from './components/CafeProducts.jsx'
+import MyPortfolio from './components/MyPortfolio.jsx'
+import PublicPortfolio, { CafePublicPortfolio } from './components/PublicPortfolio.jsx'
+import AboutPage from './components/AboutPage.jsx'
+import AdminPanel from './components/AdminPanel.jsx'
+import ServicesPage from './components/ServicesPage.jsx'
+import ContactPage from './components/ContactPage.jsx'
 
 const simulators = [
   { icon: BarChart3, title: 'Compare títulos de renda fixa', text: 'Coloque CDB, LCI, LCA e Tesouro lado a lado.' },
@@ -24,22 +27,11 @@ const simulators = [
   { icon: Dices, title: 'Sorteio computacional', text: 'Faça um sorteio livre de manipulação, transparente e com relatório completo do resultado.' },
 ]
 
-const products = ['Produto 1', 'Produto 2', 'Produto 3', 'Produto 4', 'Produto 5']
-const articles = [
-  ['Lotofácil', 'Probabilidade & estratégia'],
-  ['Educação Financeira Básica', 'Fundamentos'],
-  ['Problema da mochila na Renda Fixa', 'Pesquisa operacional'],
-  ['Análise de dividendos', 'Mercado financeiro'],
-  ['Modelo de Sorteio Computacional', 'Aleatoriedade'],
-]
-const books = ['Livro 1', 'Livro 2', 'Livro 3', 'Livro 4']
-const fallbackPosts = postsData.postagens.filter(post => post.publico)
 const cardSuits = ['♠', '♥', '♦', '♣']
-const fallbackQuotes = quotesData.frases.map(({ id, texto }) => ({ id, text: texto }))
-const testimonials = [
-  ['Depoimento 1', '@seguidor01'], ['Depoimento 2', '@seguidor02'],
-  ['Depoimento 3', '@seguidor03'], ['Depoimento 4', '@seguidor04'],
-  ['Depoimento 5', '@seguidor05'],
+const services = [
+  { icon: Megaphone, title: 'Publicidade no perfil', text: 'Podemos fechar uma parceria de publicidade desde que seja um produto ou serviço de qualidade e que faça sentido para o público do Café com Sardinha.' },
+  { icon: Code2, title: 'Desenvolvimento de software', text: 'Desenvolvemos páginas web, aplicativos, softwares sob medida e integrações entre sistemas.' },
+  { icon: GraduationCap, title: 'Consultoria Financeira ou Educacional', text: 'Apoio para construção de carteira, identificação de oportunidades, organização financeira e educação financeira.' },
 ]
 
 function SectionTitle({ eyebrow, title, description, action }) {
@@ -58,14 +50,16 @@ function PlaceholderLink({ children, className = '' }) {
 }
 
 function App() {
-  const [quotes, setQuotes] = useState(fallbackQuotes)
-  const [posts, setPosts] = useState(fallbackPosts)
+  const [quotes, setQuotes] = useState([])
+  const [posts, setPosts] = useState([])
   const [quoteIndex, setQuoteIndex] = useState(0)
   const [menuOpen, setMenuOpen] = useState(false)
   const [visiblePostRows, setVisiblePostRows] = useState(2)
+  const [siteContent, setSiteContent] = useState([])
   const [postColumns, setPostColumns] = useState(() => window.innerWidth <= 600 ? 2 : window.innerWidth <= 900 ? 3 : 5)
 
   useEffect(() => {
+    if (!quotes.length) return undefined
     const interval = window.setInterval(() => {
       setQuoteIndex(current => (current + 1) % quotes.length)
     }, 8000)
@@ -83,7 +77,9 @@ function App() {
         if (!response.ok) throw new Error('Falha ao carregar postagens')
         return response.json()
       }),
-    ]).then(([apiQuotes, apiPosts]) => {
+      fetch('/api/conteudos', { signal: controller.signal }).then(response => response.ok ? response.json() : []),
+    ]).then(([apiQuotes, apiPosts, managedContent]) => {
+      setSiteContent(managedContent)
       if (apiQuotes.length) setQuotes(apiQuotes.map(({ id, texto }) => ({ id, text: texto })))
       setPosts(apiPosts)
       setQuoteIndex(0)
@@ -101,14 +97,19 @@ function App() {
 
   const visiblePosts = posts.slice(0, visiblePostRows * postColumns)
   const hasMorePosts = visiblePosts.length < posts.length
+  const managed = type => siteContent.filter(item => item.tipo === type)
+  const displayedAchadinhos = managed('achadinho')
+  const displayedArticles = managed('artigo')
+  const displayedBooks = managed('livro')
+  const displayedTestimonials = managed('depoimento')
 
   return <div className="app-shell">
     <nav className="topbar">
       <a href="#inicio" className="wordmark"><span>CS</span>Café com Sardinha</a>
       <div className={`nav-links ${menuOpen ? 'open' : ''}`}>
-        <a href="#sobre">Sobre</a><a href="#simuladores">Simuladores</a><a href="/historico-rentabilidade">Histórico de Rentabilidade</a><a href="#achadinhos">Achadinhos do Café</a><a href="#conteudos">Conteúdos</a>
+        <a href="/sobre">Sobre</a><a href="/servicos">Serviços</a><a href="#simuladores">Simuladores</a><a href="/carteira-publica-cafe">Carteira Pública</a><a href="/historico-rentabilidade">Rentabilidade</a><a href="#achadinhos">Achadinhos do Café</a>
       </div>
-      <a className="x-button" href="https://x.com/CafeComSardinha" target="_blank" rel="noreferrer">Perfil no X <ExternalLink size={15}/></a>
+      <a className="x-button" href="/minha-area-restrita">Acessar Conta <LogIn size={15}/></a>
       <button className="menu-button" onClick={() => setMenuOpen(!menuOpen)} aria-label="Abrir menu">{menuOpen ? '×' : '☰'}</button>
     </nav>
 
@@ -129,8 +130,9 @@ function App() {
               </h1>
               <p className="handle">@CafeComSardinha</p>
             </div>
-            <div className="meta"><span><Sparkles size={15}/> Investidor desde 2010</span><span><PenLine size={15}/> Ideias complexas, linguagem simples</span>
-              <a className="profile-contact" href="mailto:cafecomsardinha@gmail.com">
+            <p className="profile-service-description">Perfil sobre educação financeira, investimentos e vida real. Desenvolvi minha própria metodologia de investimentos, longe das fórmulas da Faria Lima. Estudei análise técnica e fundamentalista, sou desenvolvedor e hoje uso a IA como uma ferramenta importante para ampliar análises, testar ideias e tomar decisões melhores.</p>
+            <div className="meta"><span><Sparkles size={15}/> Investidor desde 2010</span>
+              <a className="profile-contact" href="/contato">
                 <Mail size={17}/>
                 <span className="contact-email">cafecomsardinha@gmail.com</span>
               </a>
@@ -139,19 +141,7 @@ function App() {
         </div>
       </header>
 
-      <section id="sobre" className="section about-grid">
-        <div className="about-title">
-          <span className="eyebrow">Apresentação</span>
-          <h2>Prazer, meu codinome é Café.</h2>
-          <figure className="coffee-figure"><img src={coffeeImage} alt="Xícara de café quente com vapor" /></figure>
-        </div>
-        <div className="about-copy">
-          <p>Sou técnico em Contabilidade e Programação, formado em Web Design e Programação, com MBA em Banco de Dados Oracle e mestrado em Administração. Desenvolvo software desde os 13 anos e invisto no mercado financeiro desde 2010.</p>
-          <p>Meus principais temas de interesse e atuação são Mercado Financeiro, Educação Financeira, Aleatoriedade Computacional, Estatística, Planejamento e Processos Organizacionais e Pesquisa Operacional.</p>
-          <p>Tenho perfil criativo, humor ácido e boa leitura de contextos. Gosto de transformar assuntos complexos em textos claros, provocativos e acessíveis, combinando capacidade analítica com uma linguagem capaz de prender a atenção.</p>
-          <div className="topic-list"><span>Mercado financeiro</span><span>Mercado imobiliário</span><span>Educação financeira</span><span>Administração</span><span>Estatística</span><span>Pesquisa operacional</span><span>Programação</span><span>Marketing</span><span>Aleatoriedade computacional</span></div>
-        </div>
-      </section>
+      <section id="servicos" className="section services-section"><SectionTitle eyebrow="Como podemos ajudar" title="Serviços" description="Parcerias e soluções construídas com clareza, qualidade e propósito."/><div className="services-grid">{services.map(({ icon: Icon, title, text }) => <article key={title}><div className="icon-box"><Icon/></div><h3>{title}</h3><p>{text}</p><a className="simulator-link" href={`/contato?assunto=${encodeURIComponent(title)}`}>Solicitar informações <ArrowRight size={16}/></a></article>)}</div><a className="services-detail-link" href="/servicos">Conhecer todos os serviços <ArrowRight/></a></section>
 
       <section id="simuladores" className="section tinted">
         <SectionTitle eyebrow="Ferramentas" title="Simuladores" description="Decisões melhores começam com comparações honestas." />
@@ -160,41 +150,46 @@ function App() {
         )}</div>
       </section>
 
-      <section id="rentabilidade" className="section returns-section">
-        <div className="returns-intro"><span className="eyebrow">Transparência</span><h2>Histórico de Rentabilidade</h2><p>Resultados anuais consolidados, desempenho em relação ao CDI e evolução acumulada da carteira.</p><a className="simulator-link history-link" href="/historico-rentabilidade">Ver histórico completo <ArrowRight size={16}/></a></div>
+      <section id="carteira-publica" className="section returns-section public-wallet-section">
+        <div className="returns-intro"><span className="eyebrow">Transparência</span><h2>Carteira pública do Café</h2><p>Conheça a posição atual real que o Café com Sardinha escolheu publicar, com privacidade e dados consolidados.</p><a className="simulator-link history-link" href="/carteira-publica-cafe">Acessar carteira <ArrowRight size={16}/></a></div>
+        <aside className="public-wallet-invite"><span>Grátis</span><strong>Controle e divulgue sua carteira com privacidade.</strong><p>Teste a ferramenta: você escolhe quais informações compartilhar e mantém os dados sensíveis protegidos.</p><a href="/minha-area-restrita/detalhamento">Começar agora <ArrowRight size={16}/></a></aside>
+      </section>
+
+      <section id="rentabilidade" className="section tinted returns-section history-home-section">
+        <div className="returns-intro"><span className="eyebrow">Evolução no tempo</span><h2>Histórico de Rentabilidade</h2><p>Consulte os indicadores consolidados e o detalhamento anual e mensal registrado no histórico.</p><a className="simulator-link history-link" href="/historico-rentabilidade">Ver histórico completo <ArrowRight size={16}/></a></div>
         <PerformanceIndicators/>
       </section>
 
-      <section id="achadinhos" className="section tinted">
-        <div className="curation-block">
+      <section id="achadinhos" className={`section home-products-section ${displayedAchadinhos.length ? 'tinted' : 'brand-only'}`}>
+        {displayedAchadinhos.length > 0 && <div className="curation-block">
           <SectionTitle eyebrow="Curadoria" title="Achadinhos do Café" description="Produtos que eu já comprei, testei e indico." action="Ver todos" />
-          <div className="product-grid">{products.map((name, i) => <PlaceholderLink key={name} className="product-card"><div className="product-visual"><Package size={34}/><span>0{i+1}</span></div><small>Indicação do Café</small><h3>{name}</h3><span className="amazon-link">Ver na Amazon <ExternalLink size={14}/></span></PlaceholderLink>)}</div>
-        </div>
-        <div className="brand-products">
+          <div className="product-grid">{displayedAchadinhos.map((item, i) => <a href={item.url} target="_blank" rel="noreferrer" key={item.id} className="product-card"><div className="product-visual">{item.imagem_url ? <img src={item.imagem_url} alt=""/> : <Package size={34}/>}<span>{String(i + 1).padStart(2, '0')}</span></div><small>{item.categoria || 'Indicação do Café'}</small><h3>{item.titulo}</h3>{item.preco != null && <b>{Number(item.preco).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</b>}<span className="amazon-link">Ver indicação <ExternalLink size={14}/></span></a>)}</div>
+        </div>}
+        <div className={`brand-products ${displayedAchadinhos.length ? '' : 'standalone'}`}>
           <div className="brand-products-heading"><div><span className="eyebrow">Nossa marca</span><h2><a href="/produtos-do-cafe">Produtos do Café</a></h2><p>Canecas, bonés, camisetas e moletons com a identidade Café com Sardinha.</p></div><div className="charity-seal"><HeartHandshake size={28}/><span><strong>Lucro 100% solidário</strong>Todo o lucro será revertido para instituições de caridade.</span></div></div>
           <a className="brand-products-showcase" href="/produtos-do-cafe"><img src={cafeProductsImage} alt="Coleção de canecas, bonés, camisetas e moletons Café com Sardinha" /></a>
           <div className="brand-products-footer"><p>Vista a marca. Espalhe a ideia. Ajude quem precisa.</p><a className="soon product-launch" href="/produtos-do-cafe">Conhecer coleção</a></div>
         </div>
       </section>
 
-      <section id="conteudos" className="section content-split">
-        <div>
+      {(displayedArticles.length > 0 || displayedBooks.length > 0) && <section id="conteudos" className="section content-split">
+        {displayedArticles.length > 0 && <div>
           <SectionTitle eyebrow="Leitura aprofundada" title="Artigos interessantes" />
-          <div className="article-list">{articles.map(([title, type], i) => <PlaceholderLink className="article-row" key={title}><span className="number">0{i+1}</span><div><small>{type}</small><h3>{title}</h3></div><span className="paid">Pago</span><ArrowRight size={18}/></PlaceholderLink>)}</div>
-        </div>
-        <aside className="books-panel">
+          <div className="article-list">{displayedArticles.map((item, i) => <a href={item.url || '#'} onClick={item.url ? undefined : e => e.preventDefault()} className="article-row" key={item.id}><span className="number">0{i+1}</span><div><small>{item.subtitulo || 'Conteúdo'}</small><h3>{item.titulo}</h3></div><span className="paid">Ler</span><ArrowRight size={18}/></a>)}</div>
+        </div>}
+        {displayedBooks.length > 0 && <aside className="books-panel">
           <SectionTitle eyebrow="Na estante" title="Livros interessantes" />
-          <div className="book-list">{books.map((book, i) => <PlaceholderLink key={book} className="book-row"><div className={`book-cover color-${i}`}><BookOpen size={20}/></div><div><small>Recomendação #{i+1}</small><h3>{book}</h3></div><ExternalLink size={16}/></PlaceholderLink>)}</div>
-        </aside>
-      </section>
+          <div className="book-list">{displayedBooks.map((item, i) => <a href={item.url || '#'} onClick={item.url ? undefined : e => e.preventDefault()} key={item.id} className="book-row"><div className={`book-cover color-${i}`}><BookOpen size={20}/></div><div><small>{item.subtitulo || `Recomendação #${i+1}`}</small><h3>{item.titulo}</h3></div><ExternalLink size={16}/></a>)}</div>
+        </aside>}
+      </section>}
 
-      <section className="quote-band">
+      {quotes.length > 0 && <section className={`quote-band ${displayedArticles.length || displayedBooks.length ? '' : 'after-products'}`}>
         <div className="quote-art"><Quote/></div>
         <div className="quote-content"><span className="eyebrow">Frases interessantes</span><blockquote>“{quotes[quoteIndex].text}”</blockquote><p>— Café com Sardinha</p></div>
         <div className="quote-controls"><button onClick={() => setQuoteIndex((quoteIndex - 1 + quotes.length) % quotes.length)} aria-label="Frase anterior"><ChevronLeft/></button><span>{quoteIndex + 1} / {quotes.length}</span><button onClick={() => setQuoteIndex((quoteIndex + 1) % quotes.length)} aria-label="Próxima frase"><ChevronRight/></button></div>
-      </section>
+      </section>}
 
-      <section className="section posts-section">
+      {posts.length > 0 && <section className="section posts-section">
         <SectionTitle eyebrow="Do feed" title="Postagens interessantes" description="Uma seleção de ideias que vale salvar para ler de novo." action="Acompanhar no X" />
         <div className="post-grid">{visiblePosts.map((post, index) => {
           const suit = cardSuits[index % cardSuits.length]
@@ -207,22 +202,25 @@ function App() {
           </a>
         })}</div>
         {hasMorePosts && <div className="posts-more"><button type="button" onClick={() => setVisiblePostRows(rows => rows + 2)}>Mostrar mais postagens <ChevronRight size={18}/></button><small>{visiblePosts.length} de {posts.length} postagens</small></div>}
-      </section>
+      </section>}
 
-      <section className="section tinted">
+      {displayedTestimonials.length > 0 && <section className="section tinted">
         <SectionTitle eyebrow="O que dizem" title="Depoimentos sobre o perfil" />
-        <div className="testimonial-grid">{testimonials.map(([text, user], i) => <article className="testimonial" key={user}><Quote size={24}/><p>“{text}”</p><div><span className="person">{user.slice(1, 3).toUpperCase()}</span><div><b>Leitor do Café</b><small>{user}</small></div></div></article>)}</div>
-      </section>
+        <div className="testimonial-grid">{displayedTestimonials.map(item => <article className="testimonial" key={item.id}><Quote size={24}/><p>“{item.conteudo || item.titulo}”</p><div><span className="person">{(item.subtitulo || 'LC').replace('@','').slice(0, 2).toUpperCase()}</span><div><b>{item.titulo || 'Leitor do Café'}</b><small>{item.subtitulo}</small></div></div></article>)}</div>
+      </section>}
 
     </main>
 
     <footer>
-      <div className="footer-cta"><div><span className="eyebrow">Vamos conversar?</span><h2>Publicidade e Projetos.</h2><p>Entre em contato para parcerias, publicidade e dúvidas.</p></div><a href="mailto:cafecomsardinha@gmail.com" className="button primary"><Mail size={18}/> cafecomsardinha@gmail.com</a></div>
+      <div className="footer-cta"><div><span className="eyebrow">Vamos conversar?</span><h2>Publicidade e Projetos.</h2><p>Entre em contato para parcerias, publicidade e dúvidas.</p></div><a href="/contato" className="button primary"><Mail size={18}/> cafecomsardinha@gmail.com</a></div>
       <div className="footer-bottom"><a href="#inicio" className="wordmark"><span>CS</span>Café com Sardinha</a><p>Conteúdo educacional. Não é recomendação de investimento.</p><span>© 2026 Café com Sardinha</span></div>
     </footer>
   </div>
 }
 
-const pages = {'/simulador-pgbl-cdb':<PgblCdbSimulator/>, '/simulador-avista-aprazo':<CashInstallmentSimulator/>, '/simulador-renda-fixa':<FixedIncomeSimulator/>, '/historico-rentabilidade':<PerformanceHistory/>, '/produtos-do-cafe':<CafeProducts/>}
-const page = pages[window.location.pathname] || <App/>
+const pages = {'/simulador-pgbl-cdb':<PgblCdbSimulator/>, '/simulador-avista-aprazo':<CashInstallmentSimulator/>, '/simulador-renda-fixa':<FixedIncomeSimulator/>, '/historico-rentabilidade':<PerformanceHistory/>, '/carteira-publica-cafe':<CafePublicPortfolio/>, '/produtos-do-cafe':<CafeProducts/>, '/sobre':<AboutPage/>, '/servicos':<ServicesPage/>, '/contato':<ContactPage/>, '/admin':<AdminPanel/>}
+const legacyPrivatePage = window.location.pathname === '/minha-carteira' || window.location.pathname === '/minha-carteira/detalhamento'
+if (legacyPrivatePage) window.location.replace(window.location.pathname.replace('/minha-carteira', '/minha-area-restrita') + window.location.search)
+const privatePage = window.location.pathname === '/minha-area-restrita' || window.location.pathname === '/minha-area-restrita/detalhamento' || window.location.pathname === '/minha-conta/compras'
+const page = window.location.pathname.startsWith('/carteira/publica/') ? <PublicPortfolio/> : privatePage ? <MyPortfolio/> : pages[window.location.pathname] || <App/>
 createRoot(document.getElementById('root')).render(<React.StrictMode>{page}</React.StrictMode>)

@@ -40,9 +40,15 @@ site-cafe-com-sardinha/
 │   ├── lib/
 │   └── assets/images/
 ├── server/
-│   ├── db/
+│   ├── db/migrations/
 │   ├── scripts/
 │   └── src/
+│       ├── config/
+│       ├── middleware/
+│       ├── routes/
+│       └── services/
+├── scripts/
+│   └── product-assets/
 └── dist/
 ```
 

@@ -59,6 +59,9 @@ export function simulateCashVsInstallment(input) {
     const cashTax=cashGain*cfg.cashIncomeTax/100, installmentTax=installmentGain*cfg.installmentIncomeTax/100
     timeline.push({month,cashContribution,installmentPayment:activeInstallment?installment:0,cashInterest,installmentInterest,cashGross:cashBalance,installmentGross:installmentBalance,cashTax,installmentTax,cashNet:cashBalance-cashTax,installmentNet:installmentBalance-installmentTax})
   }
-  const final=timeline.at(-1), difference=final.cashNet-final.installmentNet
-  return {errors:{},timeline,config:cfg,summary:{cashPrice,discountValue,installment,financedAmount,cashNet:final.cashNet,installmentNet:final.installmentNet,difference,winner:difference>0?'Comprar à vista':difference<0?'Comprar parcelado':'Empate',cashTax:final.cashTax,installmentTax:final.installmentTax}}
+  const final=timeline.at(-1)
+  const difference=Math.round((final.cashNet-final.installmentNet)*100)/100
+  const winnerKey=difference>0?'cash':difference<0?'installment':'tie'
+  const winner=winnerKey==='cash'?'Comprar à vista é mais vantajoso':winnerKey==='installment'?'Comprar a prazo é mais vantajoso':'As duas alternativas são financeiramente equivalentes'
+  return {errors:{},timeline,config:cfg,summary:{cashPrice,discountValue,installment,financedAmount,cashNet:final.cashNet,installmentNet:final.installmentNet,difference,absoluteDifference:Math.abs(difference),winnerKey,winner,cashTax:final.cashTax,installmentTax:final.installmentTax}}
 }

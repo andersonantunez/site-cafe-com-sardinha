@@ -1,5 +1,5 @@
 import pg from 'pg'
-import { config } from './config.js'
+import { config } from './index.js'
 
 const poolOptions = config.databaseUrl
   ? { connectionString: config.databaseUrl, ssl: config.pg.ssl }

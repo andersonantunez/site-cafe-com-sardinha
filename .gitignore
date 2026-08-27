@@ -1,4 +1,9 @@
 node_modules/
 dist/
+logs/
 *.log
+server/.env
 .env
+.DS_Store
+Thumbs.db
+.tmp-*

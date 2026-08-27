@@ -1,9 +1,10 @@
 import React, { useMemo, useState } from 'react'
-import { ArrowLeft, BarChart3, Calculator, Download, Info, RotateCcw, ShieldCheck, Trophy } from 'lucide-react'
+import { BarChart3, Calculator, Download, Info, RotateCcw, ShieldCheck, Trophy } from 'lucide-react'
 import { simulatePgblVsCdb } from '../lib/pgblCdbSimulation.js'
 import WinnerConfetti from './WinnerConfetti.jsx'
 import FieldHelp from './FieldHelp.jsx'
 import {pgblHelp} from '../lib/simulatorFieldHelp.js'
+import ChildTopbar from './ChildTopbar.jsx'
 
 const initialValues = {
   startDate: '2025-01-01', months: 120, monthlyContribution: 500,
@@ -71,7 +72,7 @@ export default function PgblCdbSimulator() {
   }
 
   return <div className="simulator-page">
-    <header className="simulator-topbar"><a href="/"><ArrowLeft size={18}/> Voltar ao site</a><strong><span>CS</span>Café com Sardinha</strong></header>
+    <ChildTopbar className="simulator-topbar"/>
     <section className="simulator-hero"><div><span className="eyebrow">Simulador financeiro</span><h1>PGBL ou CDB?</h1><p>Compare os dois caminhos com suas próprias premissas, incluindo contrapartida do empregador, tributação, taxas e benefício fiscal.</p></div><Calculator size={76}/></section>
 
     <main className="simulator-main">
