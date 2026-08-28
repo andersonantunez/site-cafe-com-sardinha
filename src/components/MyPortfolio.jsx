@@ -5,7 +5,7 @@ import PrivateDashboardHome from './PrivateDashboardHome.jsx'
 import PurchaseHistory from './PurchaseHistory.jsx'
 import { apiRequest as request, TOKEN_KEY } from '../lib/api.js'
 
-const defaultSettings = { mostrarVencimento: true, mostrarTipoProduto: true, mostrarTaxa: true, mostrarEmissor: true, nomeCarteira: 'Minha carteira', compartilhamentoAtivo: false }
+const defaultSettings = { mostrarVencimento: false, mostrarTipoProduto: false, mostrarTaxa: false, mostrarEmissor: false, nomeCarteira: 'Minha carteira', compartilhamentoAtivo: false }
 
 export default function MyPortfolio() {
   const [user, setUser] = useState(null)

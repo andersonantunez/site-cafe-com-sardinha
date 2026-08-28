@@ -191,8 +191,49 @@ async function updateContent(id, input) {
 adminRouter.get('/me', (req, res) => res.json({ admin: true }))
 
 adminRouter.get('/usuarios', async (req, res) => {
-  const { rows } = await query('SELECT id,nome,email,ativo,is_admin FROM usuarios ORDER BY nome,email')
-  res.json(rows)
+  const search = String(req.query.busca || '').trim().slice(0, 160)
+  const from = /^\d{4}-\d{2}-\d{2}$/.test(String(req.query.de || '')) ? req.query.de : null
+  const to = /^\d{4}-\d{2}-\d{2}$/.test(String(req.query.ate || '')) ? req.query.ate : null
+  const lastFrom = /^\d{4}-\d{2}-\d{2}$/.test(String(req.query.ultimoDe || '')) ? req.query.ultimoDe : null
+  const lastTo = /^\d{4}-\d{2}-\d{2}$/.test(String(req.query.ultimoAte || '')) ? req.query.ultimoAte : null
+  const page = Math.max(1, Number.parseInt(req.query.pagina, 10) || 1)
+  const limit = Math.min(100, Math.max(10, Number.parseInt(req.query.limite, 10) || 25))
+  const params = [search, from, to, lastFrom, lastTo, limit, (page - 1) * limit]
+  const where = `WHERE ($1 = '' OR u.nome ILIKE '%' || $1 || '%' OR u.email ILIKE '%' || $1 || '%')
+    AND ($2::date IS NULL OR u.criado_em >= $2::date)
+    AND ($3::date IS NULL OR u.criado_em < ($3::date + INTERVAL '1 day'))
+    AND ($4::date IS NULL OR u.ultimo_login_em >= $4::date)
+    AND ($5::date IS NULL OR u.ultimo_login_em < ($5::date + INTERVAL '1 day'))`
+  const [{ rows }, totalResult] = await Promise.all([
+    query(`SELECT u.id,u.nome,u.email,u.ativo,u.is_admin,u.criado_em,u.ultimo_login_em,
+      EXISTS(SELECT 1 FROM compras_usuario c WHERE c.usuario_id=u.id AND c.status='comprado') AS possui_compra
+      FROM usuarios u ${where} ORDER BY u.criado_em DESC,u.id DESC LIMIT $6 OFFSET $7`, params),
+    query(`SELECT COUNT(*)::int AS total FROM usuarios u ${where}`, params.slice(0, 5)),
+  ])
+  res.json({ items: rows, total: totalResult.rows[0].total, pagina: page, limite: limit })
+})
+
+adminRouter.get('/usuarios/metricas', async (req, res) => {
+  const requestedYear = Number.parseInt(req.query.ano, 10)
+  const currentYear = new Date().getUTCFullYear()
+  const year = Number.isInteger(requestedYear) && requestedYear >= 2000 && requestedYear <= currentYear + 1 ? requestedYear : currentYear
+  const [totals, years, points] = await Promise.all([
+    query(`SELECT COUNT(*)::int AS usuarios,
+      COUNT(*) FILTER (WHERE EXISTS(SELECT 1 FROM compras_usuario c WHERE c.usuario_id=u.id AND c.status='comprado'))::int AS compradores
+      FROM usuarios u WHERE u.ativo`),
+    query(`SELECT DISTINCT EXTRACT(YEAR FROM criado_em)::int AS ano FROM usuarios
+      WHERE criado_em IS NOT NULL ORDER BY ano DESC`),
+    query(`WITH meses AS (
+        SELECT generate_series(make_date($1,1,1),make_date($1,12,1),INTERVAL '1 month')::date AS mes
+      ), novos AS (
+        SELECT date_trunc('month',criado_em)::date AS mes,COUNT(*)::int AS quantidade
+        FROM usuarios WHERE EXTRACT(YEAR FROM criado_em)=$1 GROUP BY 1
+      )
+      SELECT m.mes,COALESCE(n.quantidade,0)::int AS novos,
+        SUM(COALESCE(n.quantidade,0)) OVER (ORDER BY m.mes)::int AS acumulado
+      FROM meses m LEFT JOIN novos n ON n.mes=m.mes ORDER BY m.mes`, [year]),
+  ])
+  res.json({ ano: year, anos: years.rows.map(row => row.ano), totais: totals.rows[0], pontos: points.rows })
 })
 
 adminRouter.put('/usuarios/:id/permissao', async (req, res) => {

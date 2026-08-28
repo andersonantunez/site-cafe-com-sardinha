@@ -2,10 +2,10 @@ import { query } from '../config/database.js'
 import { normalizeRateType } from './portfolioParser.js'
 
 export const defaultVisibility = Object.freeze({
-  mostrarVencimento: true,
-  mostrarTipoProduto: true,
-  mostrarTaxa: true,
-  mostrarEmissor: true,
+  mostrarVencimento: false,
+  mostrarTipoProduto: false,
+  mostrarTaxa: false,
+  mostrarEmissor: false,
 })
 
 const formatDate = value => value
@@ -13,10 +13,10 @@ const formatDate = value => value
   : null
 
 const mapVisibility = row => ({
-  mostrarVencimento: row?.mostrar_vencimento ?? true,
-  mostrarTipoProduto: row?.mostrar_tipo_produto ?? true,
-  mostrarTaxa: row?.mostrar_taxa ?? true,
-  mostrarEmissor: row?.mostrar_emissor ?? true,
+  mostrarVencimento: row?.mostrar_vencimento ?? false,
+  mostrarTipoProduto: row?.mostrar_tipo_produto ?? false,
+  mostrarTaxa: row?.mostrar_taxa ?? false,
+  mostrarEmissor: row?.mostrar_emissor ?? false,
 })
 
 export function mapPortfolioRows(rows) {

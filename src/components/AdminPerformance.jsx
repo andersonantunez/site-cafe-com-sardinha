@@ -4,6 +4,10 @@ import { apiRequest } from '../lib/api.js'
 
 const empty = { id: null, competencia: '', rentabilidadeCarteira: '', rentabilidadeCdi: '', percentualCdi: '', publicado: true }
 const monthValue = value => String(value || '').slice(0, 7)
+const competenceLabel = value => {
+  const date = new Date(`${String(value).slice(0, 10)}T00:00:00Z`)
+  return `${date.toLocaleDateString('pt-BR', { month: 'short', timeZone: 'UTC' }).replace('.', '').toUpperCase()}/${String(date.getUTCFullYear()).slice(-2)}`
+}
 
 export default function AdminPerformance({ onStatus }) {
   const [items, setItems] = useState([])
@@ -42,6 +46,6 @@ export default function AdminPerformance({ onStatus }) {
       </div>
       <button className="admin-save"><Save/> Salvar competência</button>
     </form>
-    <div className="admin-table-wrap"><table><thead><tr><th>Competência</th><th>Carteira</th><th>CDI</th><th>% CDI</th><th>Status</th><th>Ações</th></tr></thead><tbody>{items.map(item => <tr key={item.id}><td><strong>{new Date(`${item.competencia.slice(0, 10)}T00:00:00Z`).toLocaleDateString('pt-BR', { month: 'short', year: 'numeric', timeZone: 'UTC' })}</strong></td><td>{item.rentabilidadeCarteira.toLocaleString('pt-BR')}%</td><td>{item.rentabilidadeCdi.toLocaleString('pt-BR')}%</td><td>{item.percentualCdi.toLocaleString('pt-BR')}%</td><td><span className={`status-button ${item.publicado ? 'published' : ''}`}>{item.publicado ? 'Publicado' : 'Oculto'}</span></td><td><div className="admin-row-actions"><button aria-label="Editar" onClick={() => edit(item)}><Edit3/></button><button aria-label="Excluir" className="danger" onClick={() => remove(item)}><Trash2/></button></div></td></tr>)}</tbody></table>{loading ? <p className="admin-empty">Carregando…</p> : !items.length && <p className="admin-empty">Nenhuma competência cadastrada.</p>}</div>
+    <div className="admin-table-wrap"><table><thead><tr><th>Competência</th><th>Carteira</th><th>CDI</th><th>% CDI</th><th>Status</th><th>Ações</th></tr></thead><tbody>{items.map(item => <tr key={item.id}><td><strong>{competenceLabel(item.competencia)}</strong></td><td>{item.rentabilidadeCarteira.toLocaleString('pt-BR')}%</td><td>{item.rentabilidadeCdi.toLocaleString('pt-BR')}%</td><td>{item.percentualCdi.toLocaleString('pt-BR')}%</td><td><span className={`status-button ${item.publicado ? 'published' : ''}`}>{item.publicado ? 'Publicado' : 'Oculto'}</span></td><td><div className="admin-row-actions"><button aria-label="Editar" onClick={() => edit(item)}><Edit3/></button><button aria-label="Excluir" className="danger" onClick={() => remove(item)}><Trash2/></button></div></td></tr>)}</tbody></table>{loading ? <p className="admin-empty">Carregando…</p> : !items.length && <p className="admin-empty">Nenhuma competência cadastrada.</p>}</div>
   </>
 }

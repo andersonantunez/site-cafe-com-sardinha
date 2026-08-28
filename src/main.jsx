@@ -19,6 +19,7 @@ import AboutPage from './components/AboutPage.jsx'
 import AdminPanel from './components/AdminPanel.jsx'
 import ServicesPage from './components/ServicesPage.jsx'
 import ContactPage from './components/ContactPage.jsx'
+import CuratedContentPage from './components/CuratedContentPage.jsx'
 
 const simulators = [
   { icon: BarChart3, title: 'Compare títulos de renda fixa', text: 'Coloque CDB, LCI, LCA e Tesouro lado a lado.' },
@@ -41,7 +42,7 @@ function SectionTitle({ eyebrow, title, description, action }) {
       <h2>{title}</h2>
       {description && <p>{description}</p>}
     </div>
-    {action && <a href="#" onClick={e => e.preventDefault()} className="text-link">{action}<ArrowRight size={16}/></a>}
+    {action && <a href={typeof action === 'string' ? '#' : action.href} onClick={typeof action === 'string' ? e => e.preventDefault() : undefined} className="text-link">{typeof action === 'string' ? action : action.label}<ArrowRight size={16}/></a>}
   </div>
 }
 
@@ -162,8 +163,8 @@ function App() {
 
       <section id="achadinhos" className={`section home-products-section ${displayedAchadinhos.length ? 'tinted' : 'brand-only'}`}>
         {displayedAchadinhos.length > 0 && <div className="curation-block">
-          <SectionTitle eyebrow="Curadoria" title="Achadinhos do Café" description="Produtos que eu já comprei, testei e indico." action="Ver todos" />
-          <div className="product-grid">{displayedAchadinhos.map((item, i) => <a href={item.url} target="_blank" rel="noreferrer" key={item.id} className="product-card"><div className="product-visual">{item.imagem_url ? <img src={item.imagem_url} alt=""/> : <Package size={34}/>}<span>{String(i + 1).padStart(2, '0')}</span></div><small>{item.categoria || 'Indicação do Café'}</small><h3>{item.titulo}</h3>{item.preco != null && <b>{Number(item.preco).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</b>}<span className="amazon-link">Ver indicação <ExternalLink size={14}/></span></a>)}</div>
+          <SectionTitle eyebrow="Curadoria" title="Achadinhos do Café" description="Produtos que eu já comprei, testei e indico." action={{ label: 'Ver todos', href: '/achadinhos' }} />
+          <div className="product-grid">{displayedAchadinhos.slice(0, 5).map((item, i) => <a href={item.url} target="_blank" rel="noreferrer" key={item.id} className="product-card"><div className="product-visual">{item.imagem_url ? <img src={item.imagem_url} alt=""/> : <Package size={34}/>}<span>{String(i + 1).padStart(2, '0')}</span></div><small>{item.categoria || 'Indicação do Café'}</small><h3>{item.titulo}</h3>{item.preco != null && <b>{Number(item.preco).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</b>}<span className="amazon-link">Ver indicação <ExternalLink size={14}/></span></a>)}</div>
         </div>}
         <div className={`brand-products ${displayedAchadinhos.length ? '' : 'standalone'}`}>
           <div className="brand-products-heading"><div><span className="eyebrow">Nossa marca</span><h2><a href="/produtos-do-cafe">Produtos do Café</a></h2><p>Canecas, bonés, camisetas e moletons com a identidade Café com Sardinha.</p></div><div className="charity-seal"><HeartHandshake size={28}/><span><strong>Lucro 100% solidário</strong>Todo o lucro será revertido para instituições de caridade.</span></div></div>
@@ -178,8 +179,8 @@ function App() {
           <div className="article-list">{displayedArticles.map((item, i) => <a href={item.url || '#'} onClick={item.url ? undefined : e => e.preventDefault()} className="article-row" key={item.id}><span className="number">0{i+1}</span><div><small>{item.subtitulo || 'Conteúdo'}</small><h3>{item.titulo}</h3></div><span className="paid">Ler</span><ArrowRight size={18}/></a>)}</div>
         </div>}
         {displayedBooks.length > 0 && <aside className="books-panel">
-          <SectionTitle eyebrow="Na estante" title="Livros interessantes" />
-          <div className="book-list">{displayedBooks.map((item, i) => <a href={item.url || '#'} onClick={item.url ? undefined : e => e.preventDefault()} key={item.id} className="book-row"><div className={`book-cover color-${i}`}><BookOpen size={20}/></div><div><small>{item.subtitulo || `Recomendação #${i+1}`}</small><h3>{item.titulo}</h3></div><ExternalLink size={16}/></a>)}</div>
+          <SectionTitle eyebrow="Na estante" title="Livros interessantes" action={{ label: 'Ver todos', href: '/livros-interessantes' }} />
+          <div className="book-list">{displayedBooks.slice(0, 4).map((item, i) => <a href={item.url || '#'} onClick={item.url ? undefined : e => e.preventDefault()} key={item.id} className="book-row"><div className={`book-cover color-${i}`}><BookOpen size={20}/></div><div><small>{item.subtitulo || `Recomendação #${i+1}`}</small><h3>{item.titulo}</h3></div><ExternalLink size={16}/></a>)}</div>
         </aside>}
       </section>}
 
@@ -218,7 +219,7 @@ function App() {
   </div>
 }
 
-const pages = {'/simulador-pgbl-cdb':<PgblCdbSimulator/>, '/simulador-avista-aprazo':<CashInstallmentSimulator/>, '/simulador-renda-fixa':<FixedIncomeSimulator/>, '/historico-rentabilidade':<PerformanceHistory/>, '/carteira-publica-cafe':<CafePublicPortfolio/>, '/produtos-do-cafe':<CafeProducts/>, '/sobre':<AboutPage/>, '/servicos':<ServicesPage/>, '/contato':<ContactPage/>, '/admin':<AdminPanel/>}
+const pages = {'/simulador-pgbl-cdb':<PgblCdbSimulator/>, '/simulador-avista-aprazo':<CashInstallmentSimulator/>, '/simulador-renda-fixa':<FixedIncomeSimulator/>, '/historico-rentabilidade':<PerformanceHistory/>, '/carteira-publica-cafe':<CafePublicPortfolio/>, '/produtos-do-cafe':<CafeProducts/>, '/sobre':<AboutPage/>, '/servicos':<ServicesPage/>, '/contato':<ContactPage/>, '/achadinhos':<CuratedContentPage type="achadinho"/>, '/livros-interessantes':<CuratedContentPage type="livro"/>, '/admin':<AdminPanel/>}
 const legacyPrivatePage = window.location.pathname === '/minha-carteira' || window.location.pathname === '/minha-carteira/detalhamento'
 if (legacyPrivatePage) window.location.replace(window.location.pathname.replace('/minha-carteira', '/minha-area-restrita') + window.location.search)
 const privatePage = window.location.pathname === '/minha-area-restrita' || window.location.pathname === '/minha-area-restrita/detalhamento' || window.location.pathname === '/minha-conta/compras'

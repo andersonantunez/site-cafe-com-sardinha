@@ -4,6 +4,7 @@ import { apiRequest, TOKEN_KEY } from '../lib/api.js'
 import AdminPerformance from './AdminPerformance.jsx'
 import AdminCafeProducts from './AdminCafeProducts.jsx'
 import AdminSystemSettings from './AdminSystemSettings.jsx'
+import AdminUsers from './AdminUsers.jsx'
 
 const modules = [
   ['sobre', 'Sobre'],
@@ -31,7 +32,6 @@ export default function AdminPanel() {
   const [active, setActive] = useState('sobre')
   const [items, setItems] = useState([])
   const [form, setForm] = useState(empty('sobre'))
-  const [users, setUsers] = useState([])
   const [status, setStatus] = useState('Validando permissões…')
   const [authorized, setAuthorized] = useState(null)
   const [search, setSearch] = useState('')
@@ -48,8 +48,6 @@ export default function AdminPanel() {
     }
   }
 
-  const loadConfiguration = async () => setUsers(await apiRequest('/api/admin/usuarios'))
-
   useEffect(() => {
     if (!localStorage.getItem(TOKEN_KEY)) {
       window.location.replace('/minha-area-restrita?returnTo=%2Fadmin')
@@ -58,7 +56,7 @@ export default function AdminPanel() {
     apiRequest('/api/admin/me').then(async () => {
       setAuthorized(true)
       setStatus('')
-      await Promise.all([loadConfiguration(), load('sobre')])
+      await load('sobre')
     }).catch(error => {
       if (error.status === 401) {
         localStorage.removeItem(TOKEN_KEY)
@@ -132,19 +130,6 @@ export default function AdminPanel() {
     }
   }
 
-  const toggleAdmin = async user => {
-    try {
-      const updated = await apiRequest(`/api/admin/usuarios/${user.id}/permissao`, {
-        method: 'PUT',
-        body: JSON.stringify({ isAdmin: !user.is_admin }),
-      })
-      setUsers(current => current.map(item => item.id === updated.id ? updated : item))
-      setStatus(updated.is_admin ? 'Permissão administrativa concedida.' : 'Permissão administrativa removida.')
-    } catch (error) {
-      setStatus(error.message)
-    }
-  }
-
   if (authorized === null) return <div className="private-loading">Validando permissões…</div>
   if (!authorized) return <main className="admin-denied"><section><div className="admin-denied-icon"><ShieldX/></div><span className="eyebrow">Área administrativa</span><h1>Acesso negado</h1><p>Esta área é restrita a usuários com permissão de administrador.</p><a href="/minha-area-restrita"><ArrowLeft/> Voltar para minha conta</a></section></main>
 
@@ -154,12 +139,12 @@ export default function AdminPanel() {
       <aside><h2>Gerenciamento</h2>{modules.map(([key, label]) => <button className={active === key ? 'active' : ''} key={key} onClick={() => setActive(key)}>{label}</button>)}<button className={active === 'users' ? 'active' : ''} onClick={() => setActive('users')}>Usuários</button><button className={active === 'system' ? 'active' : ''} onClick={() => setActive('system')}>Configurações do Sistema</button></aside>
       <section className="admin-content">
         {status && <p className="dashboard-status">{status}</p>}
-        {active === 'users' ? <div className="admin-config-page"><div className="admin-config admin-permissions"><span className="eyebrow">Usuários</span><h1>Permissões administrativas</h1><p>Controle quem pode acessar este painel e as APIs administrativas.</p><div>{users.map(user => <label key={user.id}><span><strong>{user.nome}</strong><small>{user.email}</small></span><input type="checkbox" checked={Boolean(user.is_admin)} disabled={!user.ativo} onChange={() => toggleAdmin(user)}/></label>)}</div></div></div> : active === 'system' ? <AdminSystemSettings onStatus={setStatus}/> : active === 'produtosCafe' ? <AdminCafeProducts onStatus={setStatus}/> : active === 'rentabilidade' ? <AdminPerformance onStatus={setStatus}/> : <>
+        {active === 'users' ? <AdminUsers onStatus={setStatus}/> : active === 'system' ? <AdminSystemSettings onStatus={setStatus}/> : active === 'produtosCafe' ? <AdminCafeProducts onStatus={setStatus}/> : active === 'rentabilidade' ? <AdminPerformance onStatus={setStatus}/> : <>
           <div className="admin-heading"><div><span className="eyebrow">Gerenciamento</span><h1>{modules.find(([key]) => key === active)?.[1]}</h1></div><button onClick={() => setForm(empty(active))}><Plus/> Novo</button></div>
           <form className="admin-form" onSubmit={save}>
             <div className="admin-form-heading"><h2>{form.id ? 'Editar conteúdo' : 'Cadastrar conteúdo'}</h2>{form.id && <button type="button" onClick={() => setForm(empty(active))}><X/> Cancelar</button>}</div>
             {active === 'frase' ? <label>Texto<textarea rows="5" required maxLength="2000" value={form.titulo} onChange={event => setForm({ ...form, titulo: event.target.value, conteudo: event.target.value })}/></label> : <label>{active === 'depoimento' ? 'Nome' : active === 'achadinho' ? 'Nome' : 'Título'}<input required maxLength="240" value={form.titulo} onChange={event => setForm({ ...form, titulo: event.target.value })}/></label>}
-            {['sobre', 'depoimento'].includes(active) && <label>{active === 'depoimento' ? 'Origem, cargo ou identificação' : 'Subtítulo'}<input maxLength="320" value={form.subtitulo} onChange={event => setForm({ ...form, subtitulo: event.target.value })}/></label>}
+            {active === 'sobre' && <label>Subtítulo<input maxLength="320" value={form.subtitulo} onChange={event => setForm({ ...form, subtitulo: event.target.value })}/></label>}
             {active !== 'frase' && <label>{active === 'livro' ? 'Resumo editorial' : active === 'depoimento' ? 'Depoimento' : 'Descrição ou conteúdo'}<textarea rows="5" required={active === 'depoimento'} value={form.conteudo} onChange={event => setForm({ ...form, conteudo: event.target.value })}/></label>}
             <div className="admin-form-grid">
               {['artigo', 'livro'].includes(active) && <label>Autor<input value={form.autor} onChange={event => setForm({ ...form, autor: event.target.value })}/></label>}
