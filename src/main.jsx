@@ -2,12 +2,13 @@ import React, { useEffect, useState } from 'react'
 import { createRoot } from 'react-dom/client'
 import {
   ArrowRight, BarChart3, BookOpen, Bookmark, Calculator, Dices,
-  ChevronLeft, ChevronRight, ExternalLink, Mail, MessageCircle, Package,
-  Code2, HeartHandshake, LogIn, Megaphone, Quote, Search, ShoppingBag, Sparkles, TrendingUp, GraduationCap,
+  ChevronLeft, ChevronRight, ExternalLink, Mail, MessageCircle, PackageSearch,
+  HeartHandshake, LogIn, Quote, Search, ShoppingBag, Sparkles, TrendingUp,
 } from 'lucide-react'
 import './styles.css'
 import logoImage from './assets/images/logo3.png'
 import cafeProductsImage from './assets/images/produtos-cafe.png'
+import publicPortfolioImage from './assets/images/carteira-publica-cafe.png'
 import PgblCdbSimulator from './components/PgblCdbSimulator.jsx'
 import CashInstallmentSimulator from './components/CashInstallmentSimulator.jsx'
 import FixedIncomeSimulator from './components/FixedIncomeSimulator.jsx'
@@ -20,6 +21,8 @@ import AdminPanel from './components/AdminPanel.jsx'
 import ServicesPage from './components/ServicesPage.jsx'
 import ContactPage from './components/ContactPage.jsx'
 import CuratedContentPage from './components/CuratedContentPage.jsx'
+import { services } from './data/services.js'
+import { CheckoutReturnPage, ContinuePurchasePage } from './components/CheckoutPages.jsx'
 
 const simulators = [
   { icon: BarChart3, title: 'Compare títulos de renda fixa', text: 'Coloque CDB, LCI, LCA e Tesouro lado a lado.' },
@@ -29,12 +32,6 @@ const simulators = [
 ]
 
 const cardSuits = ['♠', '♥', '♦', '♣']
-const services = [
-  { icon: Megaphone, title: 'Publicidade no perfil', text: 'Podemos fechar uma parceria de publicidade desde que seja um produto ou serviço de qualidade e que faça sentido para o público do Café com Sardinha.' },
-  { icon: Code2, title: 'Desenvolvimento de software', text: 'Desenvolvemos páginas web, aplicativos, softwares sob medida e integrações entre sistemas.' },
-  { icon: GraduationCap, title: 'Consultoria Financeira ou Educacional', text: 'Apoio para construção de carteira, identificação de oportunidades, organização financeira e educação financeira.' },
-]
-
 function SectionTitle({ eyebrow, title, description, action }) {
   return <div className="section-heading">
     <div>
@@ -54,10 +51,16 @@ function App() {
   const [quotes, setQuotes] = useState([])
   const [posts, setPosts] = useState([])
   const [quoteIndex, setQuoteIndex] = useState(0)
+  const [testimonialIndex, setTestimonialIndex] = useState(0)
   const [menuOpen, setMenuOpen] = useState(false)
   const [visiblePostRows, setVisiblePostRows] = useState(2)
   const [siteContent, setSiteContent] = useState([])
   const [postColumns, setPostColumns] = useState(() => window.innerWidth <= 600 ? 2 : window.innerWidth <= 900 ? 3 : 5)
+  const managed = type => siteContent.filter(item => item.tipo === type)
+  const displayedAchadinhos = managed('achadinho')
+  const displayedArticles = managed('artigo')
+  const displayedBooks = managed('livro')
+  const displayedTestimonials = managed('depoimento')
 
   useEffect(() => {
     if (!quotes.length) return undefined
@@ -66,6 +69,14 @@ function App() {
     }, 8000)
     return () => window.clearInterval(interval)
   }, [quotes.length])
+
+  useEffect(() => {
+    if (displayedTestimonials.length <= 1) return undefined
+    const interval = window.setInterval(() => {
+      setTestimonialIndex(current => (current + 1) % displayedTestimonials.length)
+    }, 8000)
+    return () => window.clearInterval(interval)
+  }, [displayedTestimonials.length])
 
   useEffect(() => {
     const controller = new AbortController()
@@ -98,12 +109,6 @@ function App() {
 
   const visiblePosts = posts.slice(0, visiblePostRows * postColumns)
   const hasMorePosts = visiblePosts.length < posts.length
-  const managed = type => siteContent.filter(item => item.tipo === type)
-  const displayedAchadinhos = managed('achadinho')
-  const displayedArticles = managed('artigo')
-  const displayedBooks = managed('livro')
-  const displayedTestimonials = managed('depoimento')
-
   return <div className="app-shell">
     <nav className="topbar">
       <a href="#inicio" className="wordmark"><span>CS</span>Café com Sardinha</a>
@@ -142,18 +147,11 @@ function App() {
         </div>
       </header>
 
-      <section id="servicos" className="section services-section"><SectionTitle eyebrow="Como podemos ajudar" title="Serviços" description="Parcerias e soluções construídas com clareza, qualidade e propósito."/><div className="services-grid">{services.map(({ icon: Icon, title, text }) => <article key={title}><div className="icon-box"><Icon/></div><h3>{title}</h3><p>{text}</p><a className="simulator-link" href={`/contato?assunto=${encodeURIComponent(title)}`}>Solicitar informações <ArrowRight size={16}/></a></article>)}</div><a className="services-detail-link" href="/servicos">Conhecer todos os serviços <ArrowRight/></a></section>
-
-      <section id="simuladores" className="section tinted">
-        <SectionTitle eyebrow="Ferramentas" title="Simuladores" description="Decisões melhores começam com comparações honestas." />
-        <div className="three-grid">{simulators.map(({ icon: Icon, title, text }, i) =>
-          <article className="sim-card" key={title}><div className="icon-box"><Icon/></div><span className="soon">Disponível</span><h3>{title}</h3><p>{text}</p>{i === 0 ? <a className="simulator-link" href="/simulador-renda-fixa">Começar simulação <ArrowRight size={16}/></a> : i === 1 ? <a className="simulator-link" href="/simulador-avista-aprazo">Começar simulação <ArrowRight size={16}/></a> : i === 2 ? <a className="simulator-link" href="/simulador-pgbl-cdb">Começar simulação <ArrowRight size={16}/></a> : <a className="simulator-link" href="https://melhorsorteio.com.br/" target="_blank" rel="noreferrer">Acessar Melhor Sorteio <ExternalLink size={16}/></a>}</article>
-        )}</div>
-      </section>
+      <section id="servicos" className="section services-section"><SectionTitle eyebrow="Como podemos ajudar" title="Serviços" description="Parcerias e soluções construídas com clareza, qualidade e propósito."/><div className="services-grid">{services.map(({ icon: Icon, title, summary, contactHref }) => <article key={title}><div className="icon-box"><Icon/></div><h3>{title}</h3><p>{summary}</p><a className="simulator-link" href={contactHref}>Solicitar informações <ArrowRight size={16}/></a></article>)}</div><a className="services-detail-link" href="/servicos">Conhecer todos os serviços <ArrowRight/></a></section>
 
       <section id="carteira-publica" className="section returns-section public-wallet-section">
         <div className="returns-intro"><span className="eyebrow">Transparência</span><h2>Carteira pública do Café</h2><p>Conheça a posição atual real que o Café com Sardinha escolheu publicar, com privacidade e dados consolidados.</p><a className="simulator-link history-link" href="/carteira-publica-cafe">Acessar carteira <ArrowRight size={16}/></a></div>
-        <aside className="public-wallet-invite"><span>Grátis</span><strong>Controle e divulgue sua carteira com privacidade.</strong><p>Teste a ferramenta: você escolhe quais informações compartilhar e mantém os dados sensíveis protegidos.</p><a href="/minha-area-restrita/detalhamento">Começar agora <ArrowRight size={16}/></a></aside>
+        <aside className="public-wallet-invite"><div className="public-wallet-invite-copy"><span>Grátis</span><strong>Controle e divulgue sua carteira com privacidade.</strong><p>Teste a ferramenta: você escolhe quais informações compartilhar e mantém os dados sensíveis protegidos.</p><a href="/minha-area-restrita/detalhamento">Começar agora <ArrowRight size={16}/></a></div><figure className="public-wallet-art"><img src={publicPortfolioImage} alt="Ilustração de um painel de investimentos com gráficos"/></figure></aside>
       </section>
 
       <section id="rentabilidade" className="section tinted returns-section history-home-section">
@@ -161,36 +159,43 @@ function App() {
         <PerformanceIndicators/>
       </section>
 
-      <section id="achadinhos" className={`section home-products-section ${displayedAchadinhos.length ? 'tinted' : 'brand-only'}`}>
-        {displayedAchadinhos.length > 0 && <div className="curation-block">
+      <section id="simuladores" className="section simulators-home-section">
+        <SectionTitle eyebrow="Ferramentas" title="Simuladores" description="Decisões melhores começam com comparações honestas." />
+        <div className="three-grid">{simulators.map(({ icon: Icon, title, text }, i) =>
+          <article className="sim-card" key={title}><div className="icon-box"><Icon/></div><span className="soon">Disponível</span><h3>{title}</h3><p>{text}</p>{i === 0 ? <a className="simulator-link" href="/simulador-renda-fixa">Começar simulação <ArrowRight size={16}/></a> : i === 1 ? <a className="simulator-link" href="/simulador-avista-aprazo">Começar simulação <ArrowRight size={16}/></a> : i === 2 ? <a className="simulator-link" href="/simulador-pgbl-cdb">Começar simulação <ArrowRight size={16}/></a> : <a className="simulator-link" href="https://melhorsorteio.com.br/" target="_blank" rel="noreferrer">Acessar Melhor Sorteio <ExternalLink size={16}/></a>}</article>
+        )}</div>
+      </section>
+
+      {displayedAchadinhos.length > 0 && <section id="achadinhos" className="section home-achadinhos-section">
+        <div className="curation-block">
           <SectionTitle eyebrow="Curadoria" title="Achadinhos do Café" description="Produtos que eu já comprei, testei e indico." action={{ label: 'Ver todos', href: '/achadinhos' }} />
-          <div className="product-grid">{displayedAchadinhos.slice(0, 5).map((item, i) => <a href={item.url} target="_blank" rel="noreferrer" key={item.id} className="product-card"><div className="product-visual">{item.imagem_url ? <img src={item.imagem_url} alt=""/> : <Package size={34}/>}<span>{String(i + 1).padStart(2, '0')}</span></div><small>{item.categoria || 'Indicação do Café'}</small><h3>{item.titulo}</h3>{item.preco != null && <b>{Number(item.preco).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</b>}<span className="amazon-link">Ver indicação <ExternalLink size={14}/></span></a>)}</div>
-        </div>}
-        <div className={`brand-products ${displayedAchadinhos.length ? '' : 'standalone'}`}>
+          <div className="product-grid">{displayedAchadinhos.slice(0, 5).map((item, i) => <a href={item.url} target="_blank" rel="noreferrer" key={item.id} className="product-card"><div className="product-visual">{item.imagem_url ? <img src={item.imagem_url} alt=""/> : <PackageSearch size={34}/>}<span>{String(i + 1).padStart(2, '0')}</span></div><small>{item.categoria || 'Indicação do Café'}</small><h3>{item.titulo}</h3>{item.preco != null && <b>{Number(item.preco).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</b>}<span className="amazon-link">Ver indicação <ExternalLink size={14}/></span></a>)}</div>
+        </div>
+      </section>}
+      <section id="produtos-cafe" className="section home-products-section">
+        <div className="brand-products standalone">
           <div className="brand-products-heading"><div><span className="eyebrow">Nossa marca</span><h2><a href="/produtos-do-cafe">Produtos do Café</a></h2><p>Canecas, bonés, camisetas e moletons com a identidade Café com Sardinha.</p></div><div className="charity-seal"><HeartHandshake size={28}/><span><strong>Lucro 100% solidário</strong>Todo o lucro será revertido para instituições de caridade.</span></div></div>
           <a className="brand-products-showcase" href="/produtos-do-cafe"><img src={cafeProductsImage} alt="Coleção de canecas, bonés, camisetas e moletons Café com Sardinha" /></a>
           <div className="brand-products-footer"><p>Vista a marca. Espalhe a ideia. Ajude quem precisa.</p><a className="soon product-launch" href="/produtos-do-cafe">Conhecer coleção</a></div>
         </div>
       </section>
 
-      {(displayedArticles.length > 0 || displayedBooks.length > 0) && <section id="conteudos" className="section content-split">
-        {displayedArticles.length > 0 && <div>
-          <SectionTitle eyebrow="Leitura aprofundada" title="Artigos interessantes" />
-          <div className="article-list">{displayedArticles.map((item, i) => <a href={item.url || '#'} onClick={item.url ? undefined : e => e.preventDefault()} className="article-row" key={item.id}><span className="number">0{i+1}</span><div><small>{item.subtitulo || 'Conteúdo'}</small><h3>{item.titulo}</h3></div><span className="paid">Ler</span><ArrowRight size={18}/></a>)}</div>
-        </div>}
-        {displayedBooks.length > 0 && <aside className="books-panel">
+      {displayedArticles.length > 0 && <section id="conteudos" className="section articles-home-section"><div>
+          <SectionTitle eyebrow="Leitura aprofundada" title="Artigos interessantes" action={{ label: 'Ver todos', href: '/artigos-interessantes' }} />
+          <div className="article-list">{displayedArticles.map((item, i) => <a href={`/artigos-interessantes?artigo=${item.id}`} className="article-row" key={item.id}><span className="number">0{i+1}</span><div><small>Conteúdo exclusivo</small><h3>{item.titulo}</h3></div><span className="paid">Conhecer</span><ArrowRight size={18}/></a>)}</div>
+        </div></section>}
+      {displayedBooks.length > 0 && <section className="section books-home-section"><aside className="books-panel">
           <SectionTitle eyebrow="Na estante" title="Livros interessantes" action={{ label: 'Ver todos', href: '/livros-interessantes' }} />
-          <div className="book-list">{displayedBooks.slice(0, 4).map((item, i) => <a href={item.url || '#'} onClick={item.url ? undefined : e => e.preventDefault()} key={item.id} className="book-row"><div className={`book-cover color-${i}`}><BookOpen size={20}/></div><div><small>{item.subtitulo || `Recomendação #${i+1}`}</small><h3>{item.titulo}</h3></div><ExternalLink size={16}/></a>)}</div>
-        </aside>}
-      </section>}
+          <div className="book-list">{displayedBooks.slice(0, 4).map((item, i) => <article key={item.id} className="book-row"><div className={`book-cover color-${i}`}>{item.imagem_url ? <img src={item.imagem_url} alt=""/> : <BookOpen size={24}/>}</div><div><small>{item.autor || `Recomendação #${i+1}`}</small><h3>{item.titulo}</h3>{item.links?.length > 0 && <div className="book-store-links">{item.links.map(link => <a href={link.url} target="_blank" rel="noreferrer" key={link.id}>{link.loja}{link.preco != null ? ` · ${Number(link.preco).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}` : ''}<ExternalLink size={13}/></a>)}</div>}</div></article>)}</div>
+        </aside></section>}
 
-      {quotes.length > 0 && <section className={`quote-band ${displayedArticles.length || displayedBooks.length ? '' : 'after-products'}`}>
+      {quotes.length > 0 && <section className="quote-section"><div className="quote-band">
         <div className="quote-art"><Quote/></div>
         <div className="quote-content"><span className="eyebrow">Frases interessantes</span><blockquote>“{quotes[quoteIndex].text}”</blockquote><p>— Café com Sardinha</p></div>
         <div className="quote-controls"><button onClick={() => setQuoteIndex((quoteIndex - 1 + quotes.length) % quotes.length)} aria-label="Frase anterior"><ChevronLeft/></button><span>{quoteIndex + 1} / {quotes.length}</span><button onClick={() => setQuoteIndex((quoteIndex + 1) % quotes.length)} aria-label="Próxima frase"><ChevronRight/></button></div>
-      </section>}
+      </div></section>}
 
-      {posts.length > 0 && <section className="section posts-section">
+      {posts.length > 0 && <section className="section posts-section"><div className="posts-section-inner">
         <SectionTitle eyebrow="Do feed" title="Postagens interessantes" description="Uma seleção de ideias que vale salvar para ler de novo." action="Acompanhar no X" />
         <div className="post-grid">{visiblePosts.map((post, index) => {
           const suit = cardSuits[index % cardSuits.length]
@@ -203,11 +208,11 @@ function App() {
           </a>
         })}</div>
         {hasMorePosts && <div className="posts-more"><button type="button" onClick={() => setVisiblePostRows(rows => rows + 2)}>Mostrar mais postagens <ChevronRight size={18}/></button><small>{visiblePosts.length} de {posts.length} postagens</small></div>}
-      </section>}
+      </div></section>}
 
-      {displayedTestimonials.length > 0 && <section className="section tinted">
+      {displayedTestimonials.length > 0 && <section className="section testimonial-section">
         <SectionTitle eyebrow="O que dizem" title="Depoimentos sobre o perfil" />
-        <div className="testimonial-grid">{displayedTestimonials.map(item => <article className="testimonial" key={item.id}><Quote size={24}/><p>“{item.conteudo || item.titulo}”</p><div><span className="person">{(item.subtitulo || 'LC').replace('@','').slice(0, 2).toUpperCase()}</span><div><b>{item.titulo || 'Leitor do Café'}</b><small>{item.subtitulo}</small></div></div></article>)}</div>
+        <article className="testimonial-carousel"><Quote className="testimonial-quote-icon"/><p>“{displayedTestimonials[testimonialIndex]?.conteudo || displayedTestimonials[testimonialIndex]?.titulo}”</p><div className="testimonial-author"><span className="person">{(displayedTestimonials[testimonialIndex]?.titulo || 'LC').replace('@','').slice(0, 2).toUpperCase()}</span><div><b>{displayedTestimonials[testimonialIndex]?.titulo || 'Leitor do Café'}</b></div></div>{displayedTestimonials.length > 1 && <div className="testimonial-controls"><button type="button" onClick={() => setTestimonialIndex((testimonialIndex - 1 + displayedTestimonials.length) % displayedTestimonials.length)} aria-label="Depoimento anterior"><ChevronLeft/></button><span>{testimonialIndex + 1} / {displayedTestimonials.length}</span><button type="button" onClick={() => setTestimonialIndex((testimonialIndex + 1) % displayedTestimonials.length)} aria-label="Próximo depoimento"><ChevronRight/></button></div>}</article>
       </section>}
 
     </main>
@@ -219,7 +224,7 @@ function App() {
   </div>
 }
 
-const pages = {'/simulador-pgbl-cdb':<PgblCdbSimulator/>, '/simulador-avista-aprazo':<CashInstallmentSimulator/>, '/simulador-renda-fixa':<FixedIncomeSimulator/>, '/historico-rentabilidade':<PerformanceHistory/>, '/carteira-publica-cafe':<CafePublicPortfolio/>, '/produtos-do-cafe':<CafeProducts/>, '/sobre':<AboutPage/>, '/servicos':<ServicesPage/>, '/contato':<ContactPage/>, '/achadinhos':<CuratedContentPage type="achadinho"/>, '/livros-interessantes':<CuratedContentPage type="livro"/>, '/admin':<AdminPanel/>}
+const pages = {'/simulador-pgbl-cdb':<PgblCdbSimulator/>, '/simulador-avista-aprazo':<CashInstallmentSimulator/>, '/simulador-renda-fixa':<FixedIncomeSimulator/>, '/historico-rentabilidade':<PerformanceHistory/>, '/carteira-publica-cafe':<CafePublicPortfolio/>, '/produtos-do-cafe':<CafeProducts/>, '/sobre':<AboutPage/>, '/servicos':<ServicesPage/>, '/contato':<ContactPage/>, '/achadinhos':<CuratedContentPage type="achadinho"/>, '/livros-interessantes':<CuratedContentPage type="livro"/>, '/artigos-interessantes':<CuratedContentPage type="artigo"/>, '/compra/continuar':<ContinuePurchasePage/>, '/compra/sucesso':<CheckoutReturnPage kind="success"/>, '/compra/cancelada':<CheckoutReturnPage kind="canceled"/>, '/compra/expirada':<CheckoutReturnPage kind="expired"/>, '/admin':<AdminPanel/>}
 const legacyPrivatePage = window.location.pathname === '/minha-carteira' || window.location.pathname === '/minha-carteira/detalhamento'
 if (legacyPrivatePage) window.location.replace(window.location.pathname.replace('/minha-carteira', '/minha-area-restrita') + window.location.search)
 const privatePage = window.location.pathname === '/minha-area-restrita' || window.location.pathname === '/minha-area-restrita/detalhamento' || window.location.pathname === '/minha-conta/compras'

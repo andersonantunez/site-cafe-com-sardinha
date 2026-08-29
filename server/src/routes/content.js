@@ -9,21 +9,23 @@ const publicQueries = {
     NULL::numeric AS preco,NULL::numeric AS preco_anterior,FALSE AS destaque,ordem
     FROM conteudos_site WHERE ativo ORDER BY ordem,id`,
   depoimento: `SELECT id,'depoimento' AS tipo,nome AS titulo,identificacao AS subtitulo,
-    texto AS conteudo,'' AS url,avatar_url AS imagem_url,NULL::text AS autor,
+    texto AS conteudo,'' AS url,NULL::text AS imagem_url,NULL::text AS autor,
     NULL::text AS fonte,NULL::text AS loja,NULL::text AS categoria,NULL::numeric AS preco,
     NULL::numeric AS preco_anterior,FALSE AS destaque,ordem
     FROM depoimentos WHERE publicado ORDER BY ordem,id`,
-  artigo: `SELECT id,'artigo' AS tipo,titulo,'' AS subtitulo,resumo AS conteudo,url,
-    imagem_url,autor,fonte,NULL::text AS loja,NULL::text AS categoria,preco,
+  artigo: `SELECT id,'artigo' AS tipo,titulo,'' AS subtitulo,resumo AS conteudo,''::text AS url,
+    imagem_url,NULL::text AS autor,NULL::text AS fonte,NULL::text AS loja,NULL::text AS categoria,preco,
     NULL::numeric AS preco_anterior,FALSE AS destaque,ordem
     FROM artigos_interessantes WHERE publicado ORDER BY ordem,id`,
   livro: `SELECT id,'livro' AS tipo,titulo,'' AS subtitulo,resumo AS conteudo,
-    amazon_url AS url,capa_url AS imagem_url,autor,NULL::text AS fonte,NULL::text AS loja,
-    NULL::text AS categoria,preco,NULL::numeric AS preco_anterior,FALSE AS destaque,ordem
+    COALESCE((SELECT link.url FROM livros_interessantes_links link JOIN lojas_comercio store ON store.id=link.loja_id AND store.ativo WHERE link.livro_id=livros_interessantes.id AND link.ativo ORDER BY link.ordem,link.id LIMIT 1),'') AS url,capa_url AS imagem_url,autor,NULL::text AS fonte,NULL::text AS loja,
+    NULL::text AS categoria,(SELECT MIN(link.preco) FROM livros_interessantes_links link JOIN lojas_comercio store ON store.id=link.loja_id AND store.ativo WHERE link.livro_id=livros_interessantes.id AND link.ativo) AS preco,NULL::numeric AS preco_anterior,FALSE AS destaque,ordem
+    ,COALESCE((SELECT jsonb_agg(jsonb_build_object('id',link.id,'lojaId',link.loja_id,'loja',store.nome,'url',link.url,'preco',link.preco) ORDER BY link.ordem,link.id) FROM livros_interessantes_links link JOIN lojas_comercio store ON store.id=link.loja_id AND store.ativo WHERE link.livro_id=livros_interessantes.id AND link.ativo),'[]'::jsonb) AS links
     FROM livros_interessantes WHERE publicado ORDER BY ordem,id`,
   achadinho: `SELECT id,'achadinho' AS tipo,nome AS titulo,'' AS subtitulo,
-    descricao_curta AS conteudo,amazon_url AS url,imagem_url,NULL::text AS autor,
-    NULL::text AS fonte,NULL::text AS loja,categoria,preco,preco_anterior,destaque,ordem
+    descricao_curta AS conteudo,COALESCE((SELECT link.url FROM achadinhos_cafe_links link JOIN lojas_comercio store ON store.id=link.loja_id AND store.ativo WHERE link.achadinho_id=achadinhos_cafe.id AND link.ativo ORDER BY link.ordem,link.id LIMIT 1),'') AS url,imagem_url,NULL::text AS autor,
+    NULL::text AS fonte,NULL::text AS loja,categoria,(SELECT MIN(link.preco) FROM achadinhos_cafe_links link JOIN lojas_comercio store ON store.id=link.loja_id AND store.ativo WHERE link.achadinho_id=achadinhos_cafe.id AND link.ativo) AS preco,NULL::numeric AS preco_anterior,destaque,ordem
+    ,COALESCE((SELECT jsonb_agg(jsonb_build_object('id',link.id,'lojaId',link.loja_id,'loja',store.nome,'url',link.url,'preco',link.preco) ORDER BY link.ordem,link.id) FROM achadinhos_cafe_links link JOIN lojas_comercio store ON store.id=link.loja_id AND store.ativo WHERE link.achadinho_id=achadinhos_cafe.id AND link.ativo),'[]'::jsonb) AS links
     FROM achadinhos_cafe WHERE publicado ORDER BY destaque DESC,ordem,id`,
 }
 

@@ -17,15 +17,21 @@ import { contentRouter } from './routes/content.js'
 import { performanceRouter } from './routes/performance.js'
 import { purchasesRouter } from './routes/purchases.js'
 import { contactRouter } from './routes/contact.js'
+import { checkoutRouter } from './routes/checkout.js'
+import { articlesRouter } from './routes/articles.js'
+import { asaasWebhookRouter } from './routes/asaasWebhook.js'
+import { uploadsRoot } from './services/imageUploadService.js'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 const distPath = path.resolve(__dirname, '../../dist')
 
 export const app = express()
 
+app.set('trust proxy', config.trustProxy)
 app.use(helmet({ contentSecurityPolicy: false }))
 app.use(cors({ origin: config.corsOrigins }))
 app.use(express.json({ limit: '8mb' }))
+app.use('/uploads', express.static(uploadsRoot, { fallthrough: false, maxAge: '7d', immutable: true }))
 
 app.get('/api/health', async (req, res) => {
   const { rows } = await query('SELECT NOW() AS database_time')
@@ -43,6 +49,9 @@ app.use('/api/conteudos', contentRouter)
 app.use('/api/rentabilidade', performanceRouter)
 app.use('/api/compras', purchasesRouter)
 app.use('/api/contato', contactRouter)
+app.use('/api/checkout', checkoutRouter)
+app.use('/api/artigos', articlesRouter)
+app.use('/api/webhooks/asaas', asaasWebhookRouter)
 
 if (config.nodeEnv === 'production') {
   app.use(express.static(distPath))

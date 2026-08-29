@@ -29,14 +29,18 @@ export default function MyPortfolio() {
     setLiquidatedAssets(portfolio.liquidatedAssets || [])
     setSettings(portfolio.settings || defaultSettings)
   }
-  const returnToAdmin = new URLSearchParams(window.location.search).get('returnTo') === '/admin'
+  const requestedReturn = new URLSearchParams(window.location.search).get('returnTo') || ''
+  const requestedUrl = new URL(requestedReturn || '/', window.location.origin)
+  const allowedReturns = new Set(['/admin', '/compra/continuar'])
+  const safeReturnTo = requestedUrl.origin === window.location.origin && allowedReturns.has(requestedUrl.pathname)
+    ? `${requestedUrl.pathname}${requestedUrl.search}` : ''
   const establishSession = async data => {
     localStorage.setItem(TOKEN_KEY, data.token)
     setUser(data.user)
     setStatus('')
     await loadPortfolio()
     setIsAdmin(await request('/api/admin/me').then(() => true).catch(() => false))
-    if (returnToAdmin) window.location.assign('/admin')
+    if (safeReturnTo) window.location.assign(safeReturnTo)
   }
 
   useEffect(() => {
@@ -45,7 +49,7 @@ export default function MyPortfolio() {
       setUser(data.user)
       await loadPortfolio()
       setIsAdmin(await request('/api/admin/me').then(() => true).catch(() => false))
-      if (returnToAdmin) window.location.assign('/admin')
+      if (safeReturnTo) window.location.assign(safeReturnTo)
     }).catch(() => localStorage.removeItem(TOKEN_KEY)).finally(() => setLoading(false))
   }, [])
   useEffect(() => {
@@ -81,12 +85,16 @@ export default function MyPortfolio() {
   const updateSettings = async next => {
     setSettings(next)
     try {
-      setSettings(await request('/api/carteira/configuracoes', { method: 'PUT', body: JSON.stringify(next) }))
+      const saved = await request('/api/carteira/configuracoes', { method: 'PUT', body: JSON.stringify(next) })
+      setSettings(saved)
       setStatus('Configurações públicas salvas.')
+      return saved
     } catch (error) { await loadPortfolio().catch(() => {}); setStatus(error.message) }
   }
   const generateShare = async () => {
     try {
+      const savedSettings = await updateSettings(settings)
+      if (!savedSettings) return
       const result = await request('/api/carteira/compartilhamento', { method: 'POST' })
       const url = new URL(result.path, window.location.origin).toString()
       setShareUrl(url); setSettings(current => ({ ...current, compartilhamentoAtivo: true }))
@@ -126,7 +134,7 @@ export default function MyPortfolio() {
       <section className="sharing-panel">
         <div><span className="eyebrow">Exposição pública</span><h2>Compartilhar carteira</h2><p>Estas opções afetam somente páginas públicas. Você sempre vê todos os campos nesta área restrita.</p></div>
         <div className="visibility-settings">
-          <label className="portfolio-name-field">Nome da Carteira<input type="text" minLength="2" maxLength="120" value={settings.nomeCarteira || ''} onChange={event => setSettings(current => ({ ...current, nomeCarteira: event.target.value }))} onBlur={() => updateSettings(settings)}/></label>
+          <form className="portfolio-name-form" onSubmit={event => { event.preventDefault(); updateSettings(settings) }}><label className="portfolio-name-field">Nome da Carteira<input required type="text" minLength="2" maxLength="120" value={settings.nomeCarteira || ''} onChange={event => setSettings(current => ({ ...current, nomeCarteira: event.target.value }))}/></label><button type="submit">Salvar nome</button></form>
           <label><input type="checkbox" checked={settings.mostrarVencimento} onChange={event => updateSettings({ ...settings, mostrarVencimento: event.target.checked })}/>Mostrar vencimento?</label>
           <label><input type="checkbox" checked={settings.mostrarTipoProduto} onChange={event => updateSettings({ ...settings, mostrarTipoProduto: event.target.checked })}/>Mostrar tipo de produto?</label>
           <label><input type="checkbox" checked={settings.mostrarTaxa} onChange={event => updateSettings({ ...settings, mostrarTaxa: event.target.checked })}/>Mostrar taxa?</label>

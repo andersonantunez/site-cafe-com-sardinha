@@ -1,7 +1,8 @@
 import { Router } from 'express'
-import { query } from '../config/database.js'
+import { pool, query } from '../config/database.js'
 import { requireAuth } from '../services/authService.js'
 import { requireAdmin } from '../services/adminService.js'
+import { saveUploadedImage } from '../services/imageUploadService.js'
 
 export const adminRouter = Router()
 adminRouter.use(requireAuth, requireAdmin)
@@ -18,6 +19,11 @@ const validUrl = (value, { required = false } = {}) => {
   } catch {
     return false
   }
+}
+
+export const isAllowedArticleUrl = value => {
+  try { return ['drive.google.com', 'docs.google.com'].includes(new URL(value).hostname.toLowerCase()) }
+  catch { return false }
 }
 
 const optionalMoney = value => {
@@ -38,13 +44,17 @@ const contentInput = body => ({
   loja: String(body.loja || '').trim(),
   categoria: String(body.categoria || '').trim(),
   preco: optionalMoney(body.preco),
-  precoAnterior: optionalMoney(body.precoAnterior ?? body.preco_anterior),
   destaque: body.destaque === true,
   ativo: body.ativo !== false,
   ordem: Number.isInteger(Number(body.ordem)) ? Number(body.ordem) : 0,
   metadados: body.metadados && typeof body.metadados === 'object' && !Array.isArray(body.metadados)
     ? body.metadados
     : {},
+  links: Array.isArray(body.links) ? body.links.slice(0, 30).map((link, ordem) => ({
+    lojaId: Number(link.lojaId ?? link.loja_id), url: String(link.url || '').trim(),
+    preco: optionalMoney(link.preco),
+    ativo: link.ativo !== false, ordem,
+  })) : [],
 })
 
 const listQueries = {
@@ -55,35 +65,39 @@ const listQueries = {
   frase: `SELECT id,'frase' AS tipo,texto AS titulo,'' AS subtitulo,texto AS conteudo,
     '' AS url,'' AS imagem_url,NULL::text AS autor,NULL::text AS fonte,NULL::text AS loja,
     NULL::text AS categoria,NULL::numeric AS preco,NULL::numeric AS preco_anterior,
-    FALSE AS destaque,publico AS ativo,ordem,criado_em,atualizado_em FROM frases ORDER BY ordem,id`,
+    FALSE AS destaque,publico AS ativo,ordem,criado_em,atualizado_em FROM frases_interessantes ORDER BY ordem,id`,
   postagem: `SELECT id,'postagem' AS tipo,titulo,'' AS subtitulo,conteudo,url,
     '' AS imagem_url,NULL::text AS autor,NULL::text AS fonte,NULL::text AS loja,
     NULL::text AS categoria,NULL::numeric AS preco,NULL::numeric AS preco_anterior,
     FALSE AS destaque,publico AS ativo,ordem,criado_em,atualizado_em,
     jsonb_build_object('hashtags',hashtags) AS metadados FROM postagens ORDER BY ordem,id`,
   depoimento: `SELECT id,'depoimento' AS tipo,nome AS titulo,identificacao AS subtitulo,
-    texto AS conteudo,'' AS url,avatar_url AS imagem_url,NULL::text AS autor,
+    texto AS conteudo,'' AS url,NULL::text AS imagem_url,NULL::text AS autor,
     NULL::text AS fonte,NULL::text AS loja,NULL::text AS categoria,NULL::numeric AS preco,
     NULL::numeric AS preco_anterior,FALSE AS destaque,publicado AS ativo,ordem,
     criado_em,atualizado_em FROM depoimentos ORDER BY ordem,id`,
   artigo: `SELECT id,'artigo' AS tipo,titulo,'' AS subtitulo,resumo AS conteudo,url,
-    imagem_url,autor,fonte,NULL::text AS loja,NULL::text AS categoria,preco,
+    imagem_url,NULL::text AS autor,NULL::text AS fonte,NULL::text AS loja,NULL::text AS categoria,preco,
     NULL::numeric AS preco_anterior,FALSE AS destaque,publicado AS ativo,ordem,
     criado_em,atualizado_em FROM artigos_interessantes ORDER BY ordem,id`,
   livro: `SELECT id,'livro' AS tipo,titulo,'' AS subtitulo,resumo AS conteudo,
-    amazon_url AS url,capa_url AS imagem_url,autor,NULL::text AS fonte,NULL::text AS loja,
-    NULL::text AS categoria,preco,NULL::numeric AS preco_anterior,FALSE AS destaque,
-    publicado AS ativo,ordem,criado_em,atualizado_em FROM livros_interessantes ORDER BY ordem,id`,
+    COALESCE((SELECT url FROM livros_interessantes_links WHERE livro_id=livros_interessantes.id AND ativo ORDER BY ordem,id LIMIT 1),'') AS url,capa_url AS imagem_url,autor,NULL::text AS fonte,NULL::text AS loja,
+    NULL::text AS categoria,(SELECT MIN(preco) FROM livros_interessantes_links WHERE livro_id=livros_interessantes.id AND ativo) AS preco,NULL::numeric AS preco_anterior,FALSE AS destaque,
+    publicado AS ativo,ordem,criado_em,atualizado_em,
+    COALESCE((SELECT jsonb_agg(jsonb_build_object('id',link.id,'lojaId',link.loja_id,'loja',store.nome,'url',link.url,'preco',link.preco,'ativo',link.ativo,'ordem',link.ordem) ORDER BY link.ordem,link.id) FROM livros_interessantes_links link JOIN lojas_comercio store ON store.id=link.loja_id WHERE link.livro_id=livros_interessantes.id),'[]'::jsonb) AS links
+    FROM livros_interessantes ORDER BY ordem,id`,
   achadinho: `SELECT id,'achadinho' AS tipo,nome AS titulo,'' AS subtitulo,
-    descricao_curta AS conteudo,amazon_url AS url,imagem_url,NULL::text AS autor,
-    NULL::text AS fonte,NULL::text AS loja,categoria,preco,preco_anterior,destaque,
-    publicado AS ativo,ordem,criado_em,atualizado_em FROM achadinhos_cafe
+    descricao_curta AS conteudo,COALESCE((SELECT url FROM achadinhos_cafe_links WHERE achadinho_id=achadinhos_cafe.id AND ativo ORDER BY ordem,id LIMIT 1),'') AS url,imagem_url,NULL::text AS autor,
+    NULL::text AS fonte,NULL::text AS loja,categoria,(SELECT MIN(preco) FROM achadinhos_cafe_links WHERE achadinho_id=achadinhos_cafe.id AND ativo) AS preco,NULL::numeric AS preco_anterior,destaque,
+    publicado AS ativo,ordem,criado_em,atualizado_em,
+    COALESCE((SELECT jsonb_agg(jsonb_build_object('id',link.id,'lojaId',link.loja_id,'loja',store.nome,'url',link.url,'preco',link.preco,'ativo',link.ativo,'ordem',link.ordem) ORDER BY link.ordem,link.id) FROM achadinhos_cafe_links link JOIN lojas_comercio store ON store.id=link.loja_id WHERE link.achadinho_id=achadinhos_cafe.id),'[]'::jsonb) AS links
+    FROM achadinhos_cafe
     ORDER BY destaque DESC,ordem,id`,
 }
 
 const deleteTables = {
   sobre: 'conteudos_site',
-  frase: 'frases',
+  frase: 'frases_interessantes',
   postagem: 'postagens',
   depoimento: 'depoimentos',
   artigo: 'artigos_interessantes',
@@ -95,100 +109,179 @@ function validationError(input) {
   if (!contentTypes.has(input.tipo)) return 'Tipo de conteúdo inválido.'
   if (!input.titulo) return 'Informe o título ou nome.'
   if (!validUrl(input.imagemUrl)) return 'Informe uma URL de imagem válida.'
-  if (Number.isNaN(input.preco) || Number.isNaN(input.precoAnterior)) return 'Informe preços válidos e não negativos.'
-  if (['postagem', 'artigo', 'livro', 'achadinho'].includes(input.tipo) && !validUrl(input.url, { required: true })) {
+  if (Number.isNaN(input.preco)) return 'Informe preços válidos e não negativos.'
+  if (['postagem', 'artigo'].includes(input.tipo) && !validUrl(input.url, { required: true })) {
     return 'Informe uma URL HTTP(S) válida.'
+  }
+  if (input.tipo === 'artigo') {
+    if (!isAllowedArticleUrl(input.url)) return 'O artigo deve usar um link válido do Google Drive ou Google Docs.'
+  }
+  if (['livro', 'achadinho'].includes(input.tipo)) {
+    if (!input.links.length) return 'Cadastre ao menos um link de loja.'
+    if (input.links.some(link => !Number.isSafeInteger(link.lojaId) || link.lojaId <= 0 || !validUrl(link.url, { required: true }) || Number.isNaN(link.preco))) return 'Revise loja, URL e preços dos links de compra.'
   }
   if (input.tipo === 'depoimento' && !input.conteudo) return 'Informe o texto do conteúdo.'
   return null
 }
 
-async function insertContent(input) {
+async function insertContent(input, execute = query) {
   switch (input.tipo) {
     case 'sobre':
-      return query(`INSERT INTO conteudos_site
+      return execute(`INSERT INTO conteudos_site
         (tipo,titulo,subtitulo,conteudo,url,imagem_url,ativo,ordem)
         VALUES ('sobre',$1,$2,$3,$4,$5,$6,$7) RETURNING *`,
       [input.titulo, input.subtitulo, input.conteudo, input.url, input.imagemUrl, input.ativo, input.ordem])
     case 'frase':
-      return query('INSERT INTO frases (texto,publico,ordem) VALUES ($1,$2,$3) RETURNING *',
+      return execute('INSERT INTO frases_interessantes (texto,publico,ordem) VALUES ($1,$2,$3) RETURNING *',
         [input.conteudo || input.titulo, input.ativo, input.ordem])
     case 'postagem': {
       const hashtags = Array.isArray(input.metadados.hashtags) ? input.metadados.hashtags.map(String).slice(0, 30) : []
-      return query(`INSERT INTO postagens
+      return execute(`INSERT INTO postagens
         (titulo,conteudo,hashtags,url,publico,ordem,data_publicacao)
         VALUES ($1,$2,$3,$4,$5,$6,CURRENT_DATE) RETURNING *`,
       [input.titulo, input.conteudo, hashtags, input.url, input.ativo, input.ordem])
     }
     case 'depoimento':
-      return query(`INSERT INTO depoimentos
-        (nome,texto,identificacao,avatar_url,publicado,ordem)
-        VALUES ($1,$2,$3,$4,$5,$6) RETURNING *`,
-      [input.titulo, input.conteudo, input.subtitulo, input.imagemUrl, input.ativo, input.ordem])
+      return execute(`INSERT INTO depoimentos
+        (nome,texto,identificacao,publicado,ordem)
+        VALUES ($1,$2,$3,$4,$5) RETURNING *`,
+      [input.titulo, input.conteudo, input.subtitulo, input.ativo, input.ordem])
     case 'artigo':
-      return query(`INSERT INTO artigos_interessantes
-        (titulo,resumo,autor,fonte,url,imagem_url,preco,publicado,ordem)
-        VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9) RETURNING *`,
-      [input.titulo, input.conteudo, input.autor, input.fonte, input.url, input.imagemUrl, input.preco, input.ativo, input.ordem])
+      return execute(`INSERT INTO artigos_interessantes
+        (titulo,resumo,url,imagem_url,preco,publicado,ordem)
+        VALUES ($1,$2,$3,$4,$5,$6,$7) RETURNING *`,
+      [input.titulo, input.conteudo, input.url, input.imagemUrl, input.preco, input.ativo, input.ordem])
     case 'livro':
-      return query(`INSERT INTO livros_interessantes
-        (titulo,autor,resumo,capa_url,amazon_url,preco,publicado,ordem)
-        VALUES ($1,$2,$3,$4,$5,$6,$7,$8) RETURNING *`,
-      [input.titulo, input.autor, input.conteudo, input.imagemUrl, input.url, input.preco, input.ativo, input.ordem])
+      return execute(`INSERT INTO livros_interessantes
+        (titulo,autor,resumo,capa_url,publicado,ordem)
+        VALUES ($1,$2,$3,$4,$5,$6) RETURNING *`,
+      [input.titulo, input.autor, input.conteudo, input.imagemUrl, input.ativo, input.ordem])
     case 'achadinho':
-      return query(`INSERT INTO achadinhos_cafe
-        (nome,descricao_curta,imagem_url,preco,preco_anterior,amazon_url,categoria,destaque,publicado,ordem)
-        VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10) RETURNING *`,
-      [input.titulo, input.conteudo, input.imagemUrl, input.preco, input.precoAnterior,
-        input.url, input.categoria, input.destaque, input.ativo, input.ordem])
+      return execute(`INSERT INTO achadinhos_cafe
+        (nome,descricao_curta,imagem_url,categoria,destaque,publicado,ordem)
+        VALUES ($1,$2,$3,$4,$5,$6,$7) RETURNING *`,
+      [input.titulo, input.conteudo, input.imagemUrl, input.categoria, input.destaque, input.ativo, input.ordem])
     default:
       throw new Error('Tipo de conteúdo inválido.')
   }
 }
 
-async function updateContent(id, input) {
+async function updateContent(id, input, execute = query) {
   switch (input.tipo) {
     case 'sobre':
-      return query(`UPDATE conteudos_site SET titulo=$1,subtitulo=$2,conteudo=$3,url=$4,
+      return execute(`UPDATE conteudos_site SET titulo=$1,subtitulo=$2,conteudo=$3,url=$4,
         imagem_url=$5,ativo=$6,ordem=$7,atualizado_em=NOW() WHERE id=$8 RETURNING *`,
       [input.titulo, input.subtitulo, input.conteudo, input.url, input.imagemUrl, input.ativo, input.ordem, id])
     case 'frase':
-      return query(`UPDATE frases SET texto=$1,publico=$2,ordem=$3,atualizado_em=NOW()
+      return execute(`UPDATE frases_interessantes SET texto=$1,publico=$2,ordem=$3,atualizado_em=NOW()
         WHERE id=$4 RETURNING *`, [input.conteudo || input.titulo, input.ativo, input.ordem, id])
     case 'postagem': {
       const hashtags = Array.isArray(input.metadados.hashtags) ? input.metadados.hashtags.map(String).slice(0, 30) : []
-      return query(`UPDATE postagens SET titulo=$1,conteudo=$2,hashtags=$3,url=$4,
+      return execute(`UPDATE postagens SET titulo=$1,conteudo=$2,hashtags=$3,url=$4,
         publico=$5,ordem=$6,atualizado_em=NOW() WHERE id=$7 RETURNING *`,
       [input.titulo, input.conteudo, hashtags, input.url, input.ativo, input.ordem, id])
     }
     case 'depoimento':
-      return query(`UPDATE depoimentos SET nome=$1,texto=$2,identificacao=$3,avatar_url=$4,
-        publicado=$5,ordem=$6,atualizado_em=NOW() WHERE id=$7 RETURNING *`,
-      [input.titulo, input.conteudo, input.subtitulo, input.imagemUrl, input.ativo, input.ordem, id])
+      return execute(`UPDATE depoimentos SET nome=$1,texto=$2,identificacao=$3,
+        publicado=$4,ordem=$5,atualizado_em=NOW() WHERE id=$6 RETURNING *`,
+      [input.titulo, input.conteudo, input.subtitulo, input.ativo, input.ordem, id])
     case 'artigo':
-      return query(`UPDATE artigos_interessantes SET titulo=$1,resumo=$2,autor=$3,fonte=$4,
-        url=$5,imagem_url=$6,preco=$7,publicado=$8,ordem=$9,atualizado_em=NOW()
-        WHERE id=$10 RETURNING *`,
-      [input.titulo, input.conteudo, input.autor, input.fonte, input.url, input.imagemUrl,
-        input.preco, input.ativo, input.ordem, id])
+      return execute(`UPDATE artigos_interessantes SET titulo=$1,resumo=$2,url=$3,
+        imagem_url=$4,preco=$5,publicado=$6,ordem=$7,atualizado_em=NOW()
+        WHERE id=$8 RETURNING *`,
+      [input.titulo, input.conteudo, input.url, input.imagemUrl, input.preco, input.ativo, input.ordem, id])
     case 'livro':
-      return query(`UPDATE livros_interessantes SET titulo=$1,autor=$2,resumo=$3,capa_url=$4,
-        amazon_url=$5,preco=$6,publicado=$7,ordem=$8,atualizado_em=NOW()
-        WHERE id=$9 RETURNING *`,
-      [input.titulo, input.autor, input.conteudo, input.imagemUrl, input.url,
-        input.preco, input.ativo, input.ordem, id])
+      return execute(`UPDATE livros_interessantes SET titulo=$1,autor=$2,resumo=$3,capa_url=$4,
+        publicado=$5,ordem=$6,atualizado_em=NOW() WHERE id=$7 RETURNING *`,
+      [input.titulo, input.autor, input.conteudo, input.imagemUrl, input.ativo, input.ordem, id])
     case 'achadinho':
-      return query(`UPDATE achadinhos_cafe SET nome=$1,descricao_curta=$2,imagem_url=$3,
-        preco=$4,preco_anterior=$5,amazon_url=$6,categoria=$7,destaque=$8,
-        publicado=$9,ordem=$10,atualizado_em=NOW() WHERE id=$11 RETURNING *`,
-      [input.titulo, input.conteudo, input.imagemUrl, input.preco, input.precoAnterior,
-        input.url, input.categoria, input.destaque, input.ativo, input.ordem, id])
+      return execute(`UPDATE achadinhos_cafe SET nome=$1,descricao_curta=$2,imagem_url=$3,
+        categoria=$4,destaque=$5,publicado=$6,ordem=$7,atualizado_em=NOW() WHERE id=$8 RETURNING *`,
+      [input.titulo, input.conteudo, input.imagemUrl, input.categoria, input.destaque, input.ativo, input.ordem, id])
     default:
       throw new Error('Tipo de conteúdo inválido.')
   }
 }
 
+async function saveCommerceLinks(client, type, parentId, links) {
+  const isBook = type === 'livro'
+  const table = isBook ? 'livros_interessantes_links' : 'achadinhos_cafe_links'
+  const foreignKey = isBook ? 'livro_id' : 'achadinho_id'
+  await client.query(`DELETE FROM ${table} WHERE ${foreignKey}=$1`, [parentId])
+  for (const [ordem, link] of links.entries()) {
+    if (isBook) {
+      await client.query(`INSERT INTO livros_interessantes_links
+        (livro_id,loja_id,url,preco,ativo,ordem) VALUES ($1,$2,$3,$4,$5,$6)`,
+      [parentId, link.lojaId, link.url, link.preco, link.ativo, ordem])
+    } else {
+      await client.query(`INSERT INTO achadinhos_cafe_links
+        (achadinho_id,loja_id,url,preco,ativo,ordem) VALUES ($1,$2,$3,$4,$5,$6)`,
+      [parentId, link.lojaId, link.url, link.preco, link.ativo, ordem])
+    }
+  }
+}
+
 adminRouter.get('/me', (req, res) => res.json({ admin: true }))
+
+adminRouter.post('/uploads', async (req, res) => {
+  try {
+    const url = await saveUploadedImage({ type: req.body.tipo, content: req.body.conteudo })
+    res.status(201).json({ url })
+  } catch (error) {
+    res.status(400).json({ error: error.message })
+  }
+})
+
+const storeInput = body => ({
+  nome: String(body.nome || '').trim(),
+  ativo: body.ativo !== false,
+  ordem: Number.isInteger(Number(body.ordem)) ? Number(body.ordem) : 0,
+})
+
+adminRouter.get('/lojas', async (req, res) => {
+  const onlyActive = req.query.ativas === 'true'
+  const { rows } = await query(`SELECT id,nome,ativo,ordem,criado_em,atualizado_em
+    FROM lojas_comercio ${onlyActive ? 'WHERE ativo' : ''} ORDER BY ordem,nome,id`)
+  res.json(rows)
+})
+
+adminRouter.post('/lojas', async (req, res) => {
+  const input = storeInput(req.body)
+  if (input.nome.length < 2 || input.nome.length > 120) return res.status(400).json({ error: 'Informe um nome de loja entre 2 e 120 caracteres.' })
+  try {
+    const { rows } = await query(`INSERT INTO lojas_comercio (nome,ativo,ordem)
+      VALUES ($1,$2,$3) RETURNING *`, [input.nome, input.ativo, input.ordem])
+    res.status(201).json(rows[0])
+  } catch (error) {
+    if (error.code === '23505') return res.status(409).json({ error: 'Esta loja já está cadastrada.' })
+    throw error
+  }
+})
+
+adminRouter.put('/lojas/:id', async (req, res) => {
+  const input = storeInput(req.body)
+  if (input.nome.length < 2 || input.nome.length > 120) return res.status(400).json({ error: 'Informe um nome de loja entre 2 e 120 caracteres.' })
+  try {
+    const { rows } = await query(`UPDATE lojas_comercio SET nome=$1,ativo=$2,ordem=$3,atualizado_em=NOW()
+      WHERE id=$4 RETURNING *`, [input.nome, input.ativo, input.ordem, req.params.id])
+    if (!rows[0]) return res.status(404).json({ error: 'Loja não encontrada.' })
+    res.json(rows[0])
+  } catch (error) {
+    if (error.code === '23505') return res.status(409).json({ error: 'Esta loja já está cadastrada.' })
+    throw error
+  }
+})
+
+adminRouter.delete('/lojas/:id', async (req, res) => {
+  try {
+    const result = await query('DELETE FROM lojas_comercio WHERE id=$1', [req.params.id])
+    if (!result.rowCount) return res.status(404).json({ error: 'Loja não encontrada.' })
+    res.status(204).end()
+  } catch (error) {
+    if (error.code === '23503') return res.status(409).json({ error: 'Esta loja possui links cadastrados. Desative-a em vez de excluir.' })
+    throw error
+  }
+})
 
 adminRouter.get('/usuarios', async (req, res) => {
   const search = String(req.query.busca || '').trim().slice(0, 160)
@@ -197,7 +290,13 @@ adminRouter.get('/usuarios', async (req, res) => {
   const lastFrom = /^\d{4}-\d{2}-\d{2}$/.test(String(req.query.ultimoDe || '')) ? req.query.ultimoDe : null
   const lastTo = /^\d{4}-\d{2}-\d{2}$/.test(String(req.query.ultimoAte || '')) ? req.query.ultimoAte : null
   const page = Math.max(1, Number.parseInt(req.query.pagina, 10) || 1)
-  const limit = Math.min(100, Math.max(10, Number.parseInt(req.query.limite, 10) || 25))
+  const limit = Math.min(50, Math.max(10, Number.parseInt(req.query.limite, 10) || 15))
+  const sortColumns = {
+    nome: 'u.nome', email: 'u.email', criado_em: 'u.criado_em', ultimo_login_em: 'u.ultimo_login_em',
+    possui_compra: `(EXISTS(SELECT 1 FROM compras_usuario sort_purchase WHERE sort_purchase.usuario_id=u.id AND sort_purchase.status='comprado'))`,
+  }
+  const sortColumn = sortColumns[String(req.query.ordenar || '')] || 'u.criado_em'
+  const sortDirection = String(req.query.direcao || '').toLowerCase() === 'asc' ? 'ASC' : 'DESC'
   const params = [search, from, to, lastFrom, lastTo, limit, (page - 1) * limit]
   const where = `WHERE ($1 = '' OR u.nome ILIKE '%' || $1 || '%' OR u.email ILIKE '%' || $1 || '%')
     AND ($2::date IS NULL OR u.criado_em >= $2::date)
@@ -207,7 +306,7 @@ adminRouter.get('/usuarios', async (req, res) => {
   const [{ rows }, totalResult] = await Promise.all([
     query(`SELECT u.id,u.nome,u.email,u.ativo,u.is_admin,u.criado_em,u.ultimo_login_em,
       EXISTS(SELECT 1 FROM compras_usuario c WHERE c.usuario_id=u.id AND c.status='comprado') AS possui_compra
-      FROM usuarios u ${where} ORDER BY u.criado_em DESC,u.id DESC LIMIT $6 OFFSET $7`, params),
+      FROM usuarios u ${where} ORDER BY ${sortColumn} ${sortDirection},u.id DESC LIMIT $6 OFFSET $7`, params),
     query(`SELECT COUNT(*)::int AS total FROM usuarios u ${where}`, params.slice(0, 5)),
   ])
   res.json({ items: rows, total: totalResult.rows[0].total, pagina: page, limite: limit })
@@ -224,7 +323,9 @@ adminRouter.get('/usuarios/metricas', async (req, res) => {
     query(`SELECT DISTINCT EXTRACT(YEAR FROM criado_em)::int AS ano FROM usuarios
       WHERE criado_em IS NOT NULL ORDER BY ano DESC`),
     query(`WITH meses AS (
-        SELECT generate_series(make_date($1,1,1),make_date($1,12,1),INTERVAL '1 month')::date AS mes
+        SELECT generate_series(make_date($1,1,1),
+          CASE WHEN $1=EXTRACT(YEAR FROM CURRENT_DATE)::int THEN date_trunc('month',CURRENT_DATE)::date ELSE make_date($1,12,1) END,
+          INTERVAL '1 month')::date AS mes
       ), novos AS (
         SELECT date_trunc('month',criado_em)::date AS mes,COUNT(*)::int AS quantidade
         FROM usuarios WHERE EXTRACT(YEAR FROM criado_em)=$1 GROUP BY 1
@@ -236,18 +337,50 @@ adminRouter.get('/usuarios/metricas', async (req, res) => {
   res.json({ ano: year, anos: years.rows.map(row => row.ano), totais: totals.rows[0], pontos: points.rows })
 })
 
-adminRouter.put('/usuarios/:id/permissao', async (req, res) => {
-  if (typeof req.body.isAdmin !== 'boolean') return res.status(400).json({ error: 'Informe a permissão administrativa.' })
-  const userId = Number(req.params.id)
-  const target = await query('SELECT id,is_admin,ativo FROM usuarios WHERE id=$1', [userId])
-  if (!target.rows[0]) return res.status(404).json({ error: 'Usuário não encontrado.' })
-  if (!req.body.isAdmin && target.rows[0].is_admin) {
-    const count = await query('SELECT COUNT(*)::int AS total FROM usuarios WHERE ativo AND is_admin')
-    if (count.rows[0].total <= 1) return res.status(409).json({ error: 'O sistema deve manter pelo menos um administrador ativo.' })
-  }
-  const { rows } = await query(`UPDATE usuarios SET is_admin=$1,atualizado_em=NOW()
-    WHERE id=$2 RETURNING id,nome,email,ativo,is_admin`, [req.body.isAdmin, userId])
+adminRouter.get('/usuarios/administradores', async (req, res) => {
+  const { rows } = await query(`SELECT id,nome,email,ultimo_login_em,criado_em
+    FROM usuarios WHERE ativo AND is_admin ORDER BY nome,email,id`)
+  res.json(rows)
+})
+
+adminRouter.post('/usuarios/permissao/verificar', async (req, res) => {
+  const email = String(req.body.email || '').trim().toLowerCase()
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) || email.length > 320) return res.status(400).json({ error: 'Informe um e-mail válido.' })
+  const { rows } = await query(`SELECT id,nome,email,ativo,is_admin FROM usuarios
+    WHERE LOWER(email)=LOWER($1)`, [email])
+  if (!rows[0]) return res.status(404).json({ error: 'Nenhum usuário foi encontrado com este e-mail.' })
+  if (!rows[0].ativo) return res.status(409).json({ error: 'Este usuário está desativado.' })
   res.json(rows[0])
+})
+
+adminRouter.post('/usuarios/permissao', async (req, res) => {
+  const email = String(req.body.email || '').trim().toLowerCase()
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) || email.length > 320) return res.status(400).json({ error: 'Informe um e-mail válido.' })
+  const { rows } = await query(`UPDATE usuarios SET is_admin=TRUE,atualizado_em=NOW()
+    WHERE LOWER(email)=LOWER($1) AND ativo RETURNING id,nome,email,ativo,is_admin`, [email])
+  if (!rows[0]) return res.status(404).json({ error: 'Usuário ativo não encontrado.' })
+  res.json(rows[0])
+})
+
+adminRouter.delete('/usuarios/:id/permissao', async (req, res) => {
+  const userId = Number(req.params.id)
+  if (!Number.isSafeInteger(userId) || userId <= 0) return res.status(400).json({ error: 'Usuário inválido.' })
+  const client = await pool.connect()
+  try {
+    await client.query('BEGIN')
+    await client.query('SELECT pg_advisory_xact_lock(734221)')
+    const target = await client.query('SELECT id,is_admin FROM usuarios WHERE id=$1 AND ativo FOR UPDATE', [userId])
+    if (!target.rows[0]?.is_admin) { await client.query('ROLLBACK'); return res.status(404).json({ error: 'Administrador não encontrado.' }) }
+    const count = await client.query('SELECT COUNT(*)::int AS total FROM usuarios WHERE ativo AND is_admin')
+    if (count.rows[0].total <= 1) { await client.query('ROLLBACK'); return res.status(409).json({ error: 'O sistema deve manter pelo menos um administrador ativo.' }) }
+    const { rows } = await client.query(`UPDATE usuarios SET is_admin=FALSE,atualizado_em=NOW()
+      WHERE id=$1 RETURNING id,nome,email,ativo,is_admin`, [userId])
+    await client.query('COMMIT')
+    res.json(rows[0])
+  } catch (error) {
+    await client.query('ROLLBACK')
+    throw error
+  } finally { client.release() }
 })
 
 adminRouter.get('/configuracoes', async (req, res) => {
@@ -405,17 +538,44 @@ adminRouter.post('/conteudos', async (req, res) => {
   const input = contentInput(req.body)
   const error = validationError(input)
   if (error) return res.status(400).json({ error })
-  const { rows } = await insertContent(input)
-  res.status(201).json(rows[0])
+  if (!['livro', 'achadinho'].includes(input.tipo)) {
+    const { rows } = await insertContent(input)
+    return res.status(201).json(rows[0])
+  }
+  const client = await pool.connect()
+  try {
+    await client.query('BEGIN')
+    const { rows } = await insertContent(input, client.query.bind(client))
+    await saveCommerceLinks(client, input.tipo, rows[0].id, input.links)
+    await client.query('COMMIT')
+    res.status(201).json(rows[0])
+  } catch (transactionError) {
+    await client.query('ROLLBACK')
+    throw transactionError
+  } finally { client.release() }
 })
 
 adminRouter.put('/conteudos/:id', async (req, res) => {
   const input = contentInput(req.body)
   const error = validationError(input)
   if (error) return res.status(400).json({ error })
-  const { rows } = await updateContent(req.params.id, input)
-  if (!rows[0]) return res.status(404).json({ error: 'Conteúdo não encontrado.' })
-  res.json(rows[0])
+  if (!['livro', 'achadinho'].includes(input.tipo)) {
+    const { rows } = await updateContent(req.params.id, input)
+    if (!rows[0]) return res.status(404).json({ error: 'Conteúdo não encontrado.' })
+    return res.json(rows[0])
+  }
+  const client = await pool.connect()
+  try {
+    await client.query('BEGIN')
+    const { rows } = await updateContent(req.params.id, input, client.query.bind(client))
+    if (!rows[0]) { await client.query('ROLLBACK'); return res.status(404).json({ error: 'Conteúdo não encontrado.' }) }
+    await saveCommerceLinks(client, input.tipo, rows[0].id, input.links)
+    await client.query('COMMIT')
+    res.json(rows[0])
+  } catch (transactionError) {
+    await client.query('ROLLBACK')
+    throw transactionError
+  } finally { client.release() }
 })
 
 adminRouter.delete('/conteudos/:id', async (req, res) => {

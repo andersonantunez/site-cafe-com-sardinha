@@ -52,3 +52,19 @@ export async function requireAuth(req, res, next) {
     res.status(401).json({ error: error.message })
   }
 }
+
+export async function optionalAuth(req, res, next) {
+  const token = req.headers.authorization?.replace(/^Bearer\s+/i, '')
+  if (!token) return next()
+  try {
+    const session = verifySession(token)
+    const userId = Number(session.sub)
+    if (!Number.isSafeInteger(userId) || userId <= 0) throw new Error('SessÃ£o invÃ¡lida.')
+    const { rows } = await query('SELECT 1 FROM usuarios WHERE id=$1 AND ativo', [userId])
+    if (!rows[0]) throw new Error('SessÃ£o invÃ¡lida.')
+    req.userId = userId
+    next()
+  } catch (error) {
+    res.status(401).json({ error: error.message })
+  }
+}

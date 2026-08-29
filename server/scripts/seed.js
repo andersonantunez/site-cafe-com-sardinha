@@ -26,7 +26,7 @@ try {
   await client.query('BEGIN')
   for (const [index, frase] of frasesData.frases.entries()) {
     await client.query(
-      'INSERT INTO frases (id, texto, publico, ordem) VALUES ($1,$2,TRUE,$3) ON CONFLICT (id) DO UPDATE SET texto=EXCLUDED.texto, ordem=EXCLUDED.ordem, atualizado_em=NOW()',
+      'INSERT INTO frases_interessantes (id, texto, publico, ordem) VALUES ($1,$2,TRUE,$3) ON CONFLICT (id) DO UPDATE SET texto=EXCLUDED.texto, ordem=EXCLUDED.ordem, atualizado_em=NOW()',
       [frase.id, frase.texto, index],
     )
   }
@@ -40,7 +40,7 @@ try {
     )
   }
 
-  await client.query("SELECT setval(pg_get_serial_sequence('frases','id'), COALESCE(MAX(id),1)) FROM frases")
+  await client.query("SELECT setval(pg_get_serial_sequence('frases_interessantes','id'), COALESCE(MAX(id),1)) FROM frases_interessantes")
   await client.query("SELECT setval(pg_get_serial_sequence('postagens','id'), COALESCE(MAX(id),1)) FROM postagens")
   await client.query('COMMIT')
   console.log(`Dados importados: ${frasesData.frases.length} frases e ${postagensData.postagens.length} postagens.`)

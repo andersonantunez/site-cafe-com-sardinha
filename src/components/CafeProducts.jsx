@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react'
-import { Coffee, HeartHandshake, Mail, Shirt, Sparkles } from 'lucide-react'
+import { Coffee, HeartHandshake, Shirt, Sparkles } from 'lucide-react'
 import ChildTopbar from './ChildTopbar.jsx'
+import PurchaseButton from './PurchaseButton.jsx'
 import heroProductsImage from '../assets/images/produtos-cafe-hero.svg'
 import mugBrown from '../assets/images/products/caneca-marrom.png'
 import mugOrange from '../assets/images/products/caneca-laranja.png'
@@ -31,7 +32,9 @@ function ProductCard({ product }) {
       {displayedPrice != null && <strong className="coffee-product-price">{Number(displayedPrice).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</strong>}
       <fieldset><legend>Cor: <strong>{color}</strong></legend><div className="color-options">{colors.map(item => <button key={item.corNome} className={color === item.corNome ? 'selected' : ''} type="button" title={item.corNome} aria-label={`Selecionar cor ${item.corNome}`} aria-pressed={color === item.corNome} onClick={() => setColor(item.corNome)} style={{ '--swatch': item.corHex }}/>)}</div></fieldset>
       {sizes.length > 0 && <fieldset><legend>Tamanho: <strong>{size}</strong></legend><div className="size-options">{sizes.map(value => <button key={value} className={size === value ? 'selected' : ''} type="button" aria-pressed={size === value} onClick={() => setSize(value)}>{value}</button>)}</div></fieldset>}
-      <a className="coffee-product-interest" href={`/contato?assunto=${encodeURIComponent(`Interesse em ${product.nome} — ${color}${size ? ` — ${size}` : ''}`)}`}><Mail/>Tenho interesse</a>
+      {displayedPrice != null && Number(displayedPrice) > 0
+        ? <PurchaseButton itemType="PRODUCT" itemId={Number(matching.id)}>Comprar</PurchaseButton>
+        : <span className="product-price-pending">Preço em configuração</span>}
     </div>
   </article>
 }
@@ -39,5 +42,5 @@ function ProductCard({ product }) {
 export default function CafeProducts() {
   const [state, setState] = useState({ loading: true, products: [], error: '' })
   useEffect(() => { fetch('/api/conteudos/produtos-cafe').then(response => { if (!response.ok) throw new Error('Não foi possível carregar a loja.'); return response.json() }).then(products => setState({ loading: false, products, error: '' })).catch(error => setState({ loading: false, products: [], error: error.message })) }, [])
-  return <div className="coffee-products-page"><ChildTopbar className="coffee-products-topbar"/><section className="coffee-products-hero"><div><span className="eyebrow">Produtos do Café</span><h1>Vista a marca. <em>Espalhe a ideia.</em></h1><p>Uma coleção criada para quem gosta de finanças sem economês, café quente e boas conversas.</p></div><img src={heroProductsImage} alt="Ilustração minimalista de chapéu, camiseta e caneca Café com Sardinha"/></section><main className="coffee-products-main"><section className="coffee-products-intro"><div><span className="eyebrow">A coleção</span><h2>Escolha seu favorito</h2><p>Confira cores, tamanhos e valores cadastrados na loja.</p></div><div className="coffee-products-charity"><HeartHandshake/><div><strong>Lucro 100% solidário</strong><span>Todo o lucro será destinado a instituições de caridade.</span></div></div></section>{state.loading ? <p className="admin-empty">Carregando produtos…</p> : state.error ? <p className="public-portfolio-state error">{state.error}</p> : <section className="coffee-products-grid" aria-label="Produtos disponíveis">{state.products.map(product => <ProductCard product={product} key={product.id}/>)}</section>}</main></div>
+  return <div className="coffee-products-page"><ChildTopbar className="coffee-products-topbar"/><section className="coffee-products-hero"><div><span className="eyebrow">Produtos do Café</span><h1>Vista a marca.<br/><em>Espalhe a ideia.</em></h1><p>Uma coleção criada para quem gosta de finanças sem economês, café quente e boas conversas.</p></div><img src={heroProductsImage} alt="Ilustração minimalista de chapéu, camiseta e caneca Café com Sardinha"/></section><main className="coffee-products-main"><section className="coffee-products-intro"><div><span className="eyebrow">A coleção</span><h2>Escolha seu favorito</h2><p>Confira cores, tamanhos e valores cadastrados na loja.</p></div><div className="coffee-products-charity"><HeartHandshake/><div><strong>Lucro 100% solidário</strong><span>Todo o lucro será destinado a instituições de caridade.</span></div></div></section>{state.loading ? <p className="admin-empty">Carregando produtos…</p> : state.error ? <p className="public-portfolio-state error">{state.error}</p> : <section className="coffee-products-grid" aria-label="Produtos disponíveis">{state.products.map(product => <ProductCard product={product} key={product.id}/>)}</section>}</main></div>
 }
